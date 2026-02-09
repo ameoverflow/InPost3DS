@@ -1,1 +1,7 @@
 source/scene_gen.py
+InPost3DS.3dsx
+InPost3DS.cia
+InPost3DS.elf
+InPost3DS.smdh
+romfs/gfx
+build/
