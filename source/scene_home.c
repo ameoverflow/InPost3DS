@@ -1137,7 +1137,7 @@ void sceneHomeMenuRender(void) {
         if (showOpenConfirmation) {
             C2D_TextParse(&qText, eventListBuf, "Czy chcesz otworzyć paczkomat?");
         } else {
-            C2D_TextParse(&qText, eventListBuf, "Czy odebrałeś paczkę?");
+            C2D_TextParse(&qText, eventListBuf, "Czy paczka została odebrana?");
         }
         C2D_TextParse(&optText, eventListBuf, "(A) Tak   (B) Nie");
         
