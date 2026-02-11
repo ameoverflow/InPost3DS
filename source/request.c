@@ -20,7 +20,8 @@ long response_code = 0;
 
 LightLock global_response_lock;
 
-C2D_SpriteSheet kuponobraz;
+// the stuff where the converted png/jpg goes
+C2D_SpriteSheet kuponobraz; 
 C2D_Image kuponkurwa;
 bool obrazekdone = false;
 
@@ -110,6 +111,7 @@ int my_curl_debug_callback(CURL *handle, curl_infotype type, char *data, size_t 
     return 0;
 }
 
+// func that actually pushes the request
 bool refresh_data(const char *url, const char *data, struct curl_slist *headers, ResponseBuffer *response_buf) {
     bool request_failed = false;
     bool retried_after_401 = false;
@@ -256,7 +258,7 @@ retry_request:
     return request_failed;
 }
 
-
+// queue stuff
 
 void request_worker(void* arg) {
     ResponseBuffer local_buf = {NULL, 0, false};
@@ -462,6 +464,7 @@ void request_worker(void* arg) {
     }
 }
 
+//pretty self-explanatory
 void queue_request(const char *url, const char *data, struct curl_slist *headers,
                    ResponseBuffer *response_buf, bool is_binary) {
     if (!url || url[0] == '\0' || !response_buf) {
@@ -502,7 +505,7 @@ void queue_request(const char *url, const char *data, struct curl_slist *headers
     LightLock_Unlock(&request_lock);
 }
 
-
+// thread stuff (if u want threaded requests, run this at the beggining/end of ur app)
 void start_request_thread() {
     LightLock_Init(&request_lock);
     LightLock_Init(&global_response_lock);
