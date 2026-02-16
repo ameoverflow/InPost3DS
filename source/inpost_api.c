@@ -29,8 +29,8 @@ ResponseBuffer jak_tam_skrytka = {NULL, 0, 0, false};
 ResponseBuffer paczkomat_image = {NULL, 0, 0, false};
 ResponseBuffer testreq = {NULL, 0, 0, false};
 
-const char* refreshToken = NULL;
-const char* authToken = NULL;
+char* refreshToken = NULL;
+char* authToken = NULL;
 int inpointsy = 0;
 
 bool pers_data_done;
@@ -73,7 +73,7 @@ void sendKodSMS(char numertel[60], char kodsms[60]){
 }
 
 // odśwież token używając refresha (tego co dostawałeś przy logowaniu bądz po odświeżeniu)
-void refresh_the_Token(const char* refresh) {
+void refresh_the_Token(char* refresh) {
     struct curl_slist *headers = NULL;
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
@@ -89,27 +89,60 @@ void refresh_the_Token(const char* refresh) {
 
 void parseRefreshedToken(const char* json){
     json_t *root = json_loads(json, 0, NULL);
-    json_t *rootenmach = json_load_file("/3ds/in_post_dane.json", 0, NULL);
+    if (!root) {
+        log_to_file("[parseRefreshedToken] jebło ale na początku");
+        return;
+    }
+
     json_t *accesstoken = json_object_get(root, "authToken");
-    json_object_set_new(rootenmach, "access", json_string(json_string_value(accesstoken)));
-    json_dump_file(rootenmach, "/3ds/in_post_dane.json", JSON_INDENT(4));
+    json_t *refreshtoken = json_object_get(root, "refreshToken"); 
+
+    if (json_is_string(accesstoken)) {
+        if (authToken) free(authToken);
+        authToken = strdup(json_string_value(accesstoken));
+    }
+
+    if (json_is_string(refreshtoken)) {
+        if (refreshToken) free(refreshToken);
+        refreshToken = strdup(json_string_value(refreshtoken));
+    }
+
+    json_t *rootenmach = json_load_file("/3ds/in_post_dane.json", 0, NULL);
+    if (rootenmach) {
+        if (json_is_string(accesstoken)) {
+            json_object_set_new(rootenmach, "access", json_string(json_string_value(accesstoken)));
+        }
+
+        if (json_is_string(refreshtoken)) {
+            json_object_set_new(rootenmach, "refresh", json_string(json_string_value(refreshtoken)));
+        }
+
+        json_dump_file(rootenmach, "/3ds/in_post_dane.json", JSON_INDENT(4));
+        json_decref(rootenmach);
+    } else {
+        log_to_file("[parseRefreshedToken] jebło");
+    }
+
+    json_decref(root); 
 }
 
 // pobierz paczki
-void getPaczkas(const char* auth) {
+void getPaczkas() {
     struct curl_slist *headers = NULL;
 
-    size_t auth_len = strlen("Authorization: ") + strlen(auth) + 1;
+    size_t auth_len = strlen("Authorization: ") + strlen(authToken) + 1;
     char *authheader = malloc(auth_len);
     if (!authheader) {
         log_to_file("[getPaczkas] ERROR: malloc failed");
         return;
     }
-    snprintf(authheader, auth_len, "Authorization: %s", auth);
+    snprintf(authheader, auth_len, "Authorization: %s", authToken);
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, "User-Agent: InPost-Mobile/3.46.0(34600200) (Horizon 11.17.0-50U; AW715988204; Nintendo 3DS; pl)");
     headers = curl_slist_append(headers, authheader);
+
+    free(authheader);
 
     queue_request("https://api-inmobile-pl.easypack24.net/v4/parcels/tracked", NULL, headers, &paczkas, false);
 }
@@ -415,60 +448,66 @@ void parsePaczkas(const char* json) {
     json_decref(root);
 }
 
-void getWyslanePaczkas(const char* auth) {
+void getWyslanePaczkas() {
     struct curl_slist *headers = NULL;
 
-    size_t auth_len = strlen("Authorization: ") + strlen(auth) + 1;
+    size_t auth_len = strlen("Authorization: ") + strlen(authToken) + 1;
     char *authheader = malloc(auth_len);
     if (!authheader) {
         log_to_file("[getPaczkas] ERROR: malloc failed");
         return;
     }
-    snprintf(authheader, auth_len, "Authorization: %s", auth);
+    snprintf(authheader, auth_len, "Authorization: %s", authToken);
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, "User-Agent: InPost-Mobile/3.46.0(34600200) (Horizon 11.17.0-50U; AW715988204; Nintendo 3DS; pl)");
     headers = curl_slist_append(headers, authheader);
+
+    free(authheader);
 
     queue_request("https://api-inmobile-pl.easypack24.net/v4/parcels/sent", NULL, headers, &sent_paczkas, false);
 
 }
 
 // pobierz zwrócone paczki
-void getReturnedPaczkas(const char* auth) {
+void getReturnedPaczkas() {
     struct curl_slist *headers = NULL;
 
-    size_t auth_len = strlen("Authorization: ") + strlen(auth) + 1;
+    size_t auth_len = strlen("Authorization: ") + strlen(authToken) + 1;
     char *authheader = malloc(auth_len);
     if (!authheader) {
         log_to_file("[getPaczkas] ERROR: malloc failed");
         return;
     }
-    snprintf(authheader, auth_len, "Authorization: %s", auth);
+    snprintf(authheader, auth_len, "Authorization: %s", authToken);
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, "User-Agent: InPost-Mobile/3.46.0(34600200) (Horizon 11.17.0-50U; AW715988204; Nintendo 3DS; pl)");
     headers = curl_slist_append(headers, authheader);
+
+    free(authheader);
 
     queue_request("https://api-inmobile-pl.easypack24.net/v1/returns/tickets", NULL, headers, &returned_paczkas, false);
 
 }
 
 // pobierz dane jak imie i nazwisko, ulubiony paczkomat itp
-void getPersonalData(const char* auth) {
+void getPersonalData() {
     struct curl_slist *headers = NULL;
 
-    size_t auth_len = strlen("Authorization: ") + strlen(auth) + 1;
+    size_t auth_len = strlen("Authorization: ") + strlen(authToken) + 1;
     char *authheader = malloc(auth_len);
     if (!authheader) {
         log_to_file("[getPersonalData] ERROR: malloc failed");
         return;
     }
-    snprintf(authheader, auth_len, "Authorization: %s", auth);
+    snprintf(authheader, auth_len, "Authorization: %s", authToken);
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, "User-Agent: InPost-Mobile/3.46.0(34600200) (Horizon 11.17.0-50U; AW715988204; Nintendo 3DS; pl)");
     headers = curl_slist_append(headers, authheader);
+
+    free(authheader);
 
     queue_request("https://api-inmobile-pl.easypack24.net/izi/app/shopping/v2/profile", NULL, headers, &dane_usera, false);
 }
@@ -517,23 +556,22 @@ void parsePersonalData(const char* json){
 }
 
 // pobierz inpointsy (never used lol)
-void getInPointsBalance(const char* auth) {
+void getInPointsBalance() {
     struct curl_slist *headers = NULL;
 
-    size_t auth_len = strlen("Authorization: ") + strlen(auth) + 1;
+    size_t auth_len = strlen("Authorization: ") + strlen(authToken) + 1;
     char *authheader = malloc(auth_len);
     if (!authheader) {
         log_to_file("[getPersonalData] ERROR: malloc failed");
         return;
     }
-    snprintf(authheader, auth_len, "Authorization: %s", auth);
+    snprintf(authheader, auth_len, "Authorization: %s", authToken);
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, "User-Agent: InPost-Mobile/3.46.0(34600200) (Horizon 11.17.0-50U; AW715988204; Nintendo 3DS; pl)");
     headers = curl_slist_append(headers, authheader);
 
     queue_request("https://api-inmobile-pl.easypack24.net/loyalty/v1/wallet/balance", NULL, headers, &balans_konta, false);
-    curl_slist_free_all(headers);
     free(authheader);
 }
 
@@ -545,16 +583,16 @@ void parseInPointsBalance(const char* json){
 }
 
 // pobierz status paczkomatu który otwierasz
-void getPaczkomatStatus(const char* auth, const char* shipmentNumber, const char* openCode, const char* recieverPhoneNumber, const char* recieverPhonePrefix, float latitude, float longitude) {
+void getPaczkomatStatus(const char* shipmentNumber, const char* openCode, const char* recieverPhoneNumber, const char* recieverPhonePrefix, float latitude, float longitude) {
     struct curl_slist *headers = NULL;
 
-    size_t auth_len = strlen("Authorization: ") + strlen(auth) + 1;
+    size_t auth_len = strlen("Authorization: ") + strlen(authToken) + 1;
     char *authheader = malloc(auth_len);
     if (!authheader) {
         log_to_file("[getPaczkas] ERROR: malloc failed");
         return;
     }
-    snprintf(authheader, auth_len, "Authorization: %s", auth);
+    snprintf(authheader, auth_len, "Authorization: %s", authToken);
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, "User-Agent: InPost-Mobile/3.46.0(34600200) (Horizon 11.17.0-50U; AW715988204; Nintendo 3DS; pl)");
@@ -584,25 +622,28 @@ void getPaczkomatStatus(const char* auth, const char* shipmentNumber, const char
     json_object_set_new(data, "parcel", parcel);
     json_object_set_new(data, "geoPoint", geo);
     char *data_json = json_dumps(data, JSON_INDENT(2));
+    free(authheader);
     queue_request("https://api-inmobile-pl.easypack24.net/v2/collect/validate", data_json, headers, &validate_paczkomat, false);
     free(data_json);
 }
 
 // sezamie otwórz się
-void openPaczkomat(const char* auth, const char* uuid) {
+void openPaczkomat(const char* uuid) {
     struct curl_slist *headers = NULL;
 
-    size_t auth_len = strlen("Authorization: ") + strlen(auth) + 1;
+    size_t auth_len = strlen("Authorization: ") + strlen(authToken) + 1;
     char *authheader = malloc(auth_len);
     if (!authheader) {
         log_to_file("[openPaczkomat] ERROR: malloc failed");
         return;
     }
-    snprintf(authheader, auth_len, "Authorization: %s", auth);
+    snprintf(authheader, auth_len, "Authorization: %s", authToken);
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, "User-Agent: InPost-Mobile/3.46.0(34600200) (Horizon 11.17.0-50U; AW715988204; Nintendo 3DS; pl)");
     headers = curl_slist_append(headers, authheader);
+
+    free(authheader);
 
     json_t *data = json_object();
     json_object_set_new(data, "sessionUuid", json_string(uuid));
@@ -658,20 +699,22 @@ void openPaczkomat(const char* auth, const char* uuid) {
 // 5PPPPPPGGGGGPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP5555PPPPPPPPPPPPPP5555PPP57!7777PBBPYJ5PPPP5YJ7~~~~~~~!!~!7777777JPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPJ!~~~^^^~~!JPPPPPPPPPPPPPPPPPPPPPPPPPP5?7!~~~~~~~~^^^^^^^~~~~~
 // 5PPPPPPPGPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP555Y7!777?5GP55?Y555YYJ?!!!~~~~~!!!!7777777J55PPPPPPPPPPPPPPPPPPPPPPPPPPPPP5?~~~~~~75PPPPPPPPPPPPPPPPPPPPPPPPPPP55Y7~~~~~~~~^^^^^^~~~~~~
 // 5GGPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP5PPPPPPP55?777777PG5J5?JYYJJJJ?!~~~~~~~~!!!777777!?PPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPGY!!!!!!JGPGPPPPPPPPPPPPPPPPPPPPPPPPPPP557!~~^^^^^^^^^^~~^^^^
-void terminatePaczka(const char* auth, const char* uuid) {
+void terminatePaczka(const char* uuid) {
     struct curl_slist *headers = NULL;
 
-    size_t auth_len = strlen("Authorization: ") + strlen(auth) + 1;
+    size_t auth_len = strlen("Authorization: ") + strlen(authToken) + 1;
     char *authheader = malloc(auth_len);
     if (!authheader) {
         log_to_file("[openPaczkomat] ERROR: malloc failed");
         return;
     }
-    snprintf(authheader, auth_len, "Authorization: %s", auth);
+    snprintf(authheader, auth_len, "Authorization: %s", authToken);
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, "User-Agent: InPost-Mobile/3.46.0(34600200) (Horizon 11.17.0-50U; AW715988204; Nintendo 3DS; pl)");
     headers = curl_slist_append(headers, authheader);
+
+    free(authheader);
 
     json_t *data = json_object();
     json_object_set_new(data, "sessionUuid", json_string(uuid));
@@ -681,16 +724,16 @@ void terminatePaczka(const char* auth, const char* uuid) {
 }
 
 // sprawdź czy skrytka została actually zamknięta
-void jaktamSkrytka(const char* auth, const char* uuid, bool otwarta) {
+void jaktamSkrytka(const char* uuid, bool otwarta) {
     struct curl_slist *headers = NULL;
 
-    size_t auth_len = strlen("Authorization: ") + strlen(auth) + 1;
+    size_t auth_len = strlen("Authorization: ") + strlen(authToken) + 1;
     char *authheader = malloc(auth_len);
     if (!authheader) {
         log_to_file("[openPaczkomat] ERROR: malloc failed");
         return;
     }
-    snprintf(authheader, auth_len, "Authorization: %s", auth);
+    snprintf(authheader, auth_len, "Authorization: %s", authToken);
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, "User-Agent: InPost-Mobile/3.46.0(34600200) (Horizon 11.17.0-50U; AW715988204; Nintendo 3DS; pl)");
@@ -726,22 +769,23 @@ void getPaczkomatImage(const char* url) {
 
 
 
-void getEverything(const char* auth) {
+void getEverything() {
     doing_debug_logs = true;
     log_to_file("LOGI ZBIORCZE (DEBUG PURPOSES ONLY)\n");
     struct curl_slist *headers = NULL;
 
-    size_t auth_len = strlen("Authorization: ") + strlen(auth) + 1;
+    size_t auth_len = strlen("Authorization: ") + strlen(authToken) + 1;
     char *authheader = malloc(auth_len);
     if (!authheader) {
         log_to_file("[getPaczkas] ERROR: malloc failed");
         return;
     }
-    snprintf(authheader, auth_len, "Authorization: %s", auth);
+    snprintf(authheader, auth_len, "Authorization: %s", authToken);
 
     headers = curl_slist_append(headers, "Content-Type: application/json");
     headers = curl_slist_append(headers, authheader);
     headers = curl_slist_append(headers, "User-Agent: InPost-Mobile/3.46.0(34600200) (Horizon 11.17.0-50U; AW715988204; Nintendo 3DS; pl)");
+    free(authheader);
     log_to_file("[API] Paczki do ciebie:\n");
     refresh_data("https://api-inmobile-pl.easypack24.net/v4/parcels/tracked", NULL, headers, &paczkas);
     log_to_file("[RESPONSE] %s\n", paczkas.data);
@@ -755,4 +799,5 @@ void getEverything(const char* auth) {
     refresh_data("https://api-inmobile-pl.easypack24.net/izi/app/shopping/v2/profile", NULL, headers, &dane_usera);
     log_to_file("[RESPONSE] %s\n", dane_usera.data);
     doing_debug_logs = false;
+    curl_slist_free_all(headers);
 }

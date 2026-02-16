@@ -58,7 +58,7 @@ void sceneDebugUpdate(uint32_t kDown, uint32_t kHeld) {
     if (kDown & KEY_A) {
         switch (debugMenuSelected) {
             case 0:
-                getEverything(authToken);
+                getEverything();
                 break;
 
             case 1:

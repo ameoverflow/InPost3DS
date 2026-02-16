@@ -17,8 +17,8 @@ extern ResponseBuffer terminate_paczka;
 extern ResponseBuffer jak_tam_skrytka;
 extern ResponseBuffer testreq;
 
-extern const char* refreshToken;
-extern const char* authToken;
+extern char* refreshToken;
+extern char* authToken;
 extern int inpointsy;
 
 extern bool pers_data_done;
@@ -66,24 +66,24 @@ extern int paczka_count;
 void testrequest();
 void sendNumerTel(char numertel[60]);
 void sendKodSMS(char numertel[60],char kodsms[60]);
-void refresh_the_Token(const char* refresh);
+void refresh_the_Token(char* refresh);
 void parseRefreshedToken(const char* json);
-void getPaczkas(const char* auth);
+void getPaczkas();
 void parseFakePaczkas();
 void parsePaczkas(const char* json);
-void getWyslanePaczkas(const char* auth);
-void getReturnedPaczkas(const char* auth);
-void getPersonalData(const char* auth);
+void getWyslanePaczkas();
+void getReturnedPaczkas();
+void getPersonalData();
 void parsePersonalData(const char* json);
-void getInPointsBalance(const char* auth);
+void getInPointsBalance();
 void parseInPointsBalance(const char* json);
-void getPaczkomatStatus(const char* auth, const char* shipmentNumber, const char* openCode, const char* recieverPhoneNumber, const char* recieverPhonePrefix, float latitude, float longitude);
-void openPaczkomat(const char* auth, const char* uuid);
-void terminatePaczka(const char* auth, const char* uuid);
-void jaktamSkrytka(const char* auth, const char* uuid, bool otwarta);
+void getPaczkomatStatus(const char* shipmentNumber, const char* openCode, const char* recieverPhoneNumber, const char* recieverPhonePrefix, float latitude, float longitude);
+void openPaczkomat(const char* uuid);
+void terminatePaczka(const char* uuid);
+void jaktamSkrytka(const char* uuid, bool otwarta);
 void getPaczkomatImage(const char* url);
 
 
-void getEverything(const char* auth);
+void getEverything();
 
 #endif

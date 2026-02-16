@@ -208,7 +208,7 @@ void updateQrCodeTexture(const char* qrData) {
 
 void requestOpenLocker(void) {
     if (selectedPaczkaIndex >= 0 && selectedPaczkaIndex < paczka_count) {
-        getPaczkomatStatus(authToken, paczka_list[selectedPaczkaIndex].shipmentNumber, paczka_list[selectedPaczkaIndex].opencode, paczka_list[selectedPaczkaIndex].phoneNumber, paczka_list[selectedPaczkaIndex].phonePrefix, paczka_list[selectedPaczkaIndex].latitude, paczka_list[selectedPaczkaIndex].longitude);
+        getPaczkomatStatus(paczka_list[selectedPaczkaIndex].shipmentNumber, paczka_list[selectedPaczkaIndex].opencode, paczka_list[selectedPaczkaIndex].phoneNumber, paczka_list[selectedPaczkaIndex].phonePrefix, paczka_list[selectedPaczkaIndex].latitude, paczka_list[selectedPaczkaIndex].longitude);
     }
 }
 
@@ -217,7 +217,7 @@ void onPaczkaCollected(void) {
     if(root) {
         json_t *uuid_open = json_object_get(root, "sessionUuid");
         if(uuid_open) {
-            terminatePaczka(authToken, json_string_value(uuid_open));
+            terminatePaczka(json_string_value(uuid_open));
         }
         json_decref(root);
     }
@@ -434,11 +434,11 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
     
 
     if (!tryToGetPaczkas){
-        getPaczkas(authToken);
+        getPaczkas();
         tryToGetPaczkas = true;
     }
     if (!tryToGetPersonalData){
-        getPersonalData(authToken);
+        getPersonalData();
         tryToGetPersonalData = true;
     }
     if (dane_usera.done && !pers_data_done){
@@ -462,7 +462,7 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
         if (root) {
             json_t *uuid_open = json_object_get(root, "sessionUuid");
             open_paczkomat.done = false;
-            if(uuid_open) openPaczkomat(authToken, json_string_value(uuid_open));
+            if(uuid_open) openPaczkomat(json_string_value(uuid_open));
             json_decref(root);
         }
         is_in_open_paczkomat_flow = false;

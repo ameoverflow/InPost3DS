@@ -186,8 +186,9 @@ retry_request:
         if (!doing_debug_logs) {
             log_to_file("[refresh_data] Success. Code: %ld", response_code);
         }
+        
     }
-
+    log_to_file("[refresh_data] Response Body:\n%s", response_buf->data);
     curl_easy_cleanup(curl);
     loadingshit = false;
     requestdone = true;
@@ -216,22 +217,16 @@ retry_request:
 
         curl_slist_free_all(refresh_headers);
 
-        if (get_refresh_token.data && get_refresh_token.size > 0) {
+        if (get_refresh_token.data) {
             parseRefreshedToken(get_refresh_token.data);
         }
 
-        json_t *jsonfl = json_load_file("/3ds/in_post_dane.json", 0, NULL);
-        if (jsonfl) {
-            json_t *access = json_object_get(jsonfl, "access");
-            if (authToken) free(authToken);
-            authToken = strdup(json_string_value(access));
-            json_decref(jsonfl);
-        }
 
         headers = NULL; 
-
         struct curl_slist *retry_headers = NULL;
         char authheader[2048];
+        
+
         snprintf(authheader, sizeof(authheader), "Authorization: %s", authToken);
         
         retry_headers = curl_slist_append(retry_headers, "Content-Type: application/json");
