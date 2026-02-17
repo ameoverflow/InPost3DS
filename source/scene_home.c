@@ -10,19 +10,32 @@
 #include <stdio.h>
 #include "scene_debug.h"
 #include "scene_init.h"
-#include <math.h> 
+#include <math.h>
 #include "qrcodegen.h"
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "scene_mainmenu.h"
 
-extern int paczka_count; 
-extern Paczka paczka_list[]; 
+extern int paczka_count;
+extern Paczka paczka_list[];
 
+static int formatIsoDateTime(const char* iso, char* out, size_t outsz) {
+    if (!iso || !*iso || !out || outsz == 0) return 0;
+
+    int y = 0, m = 0, d = 0, hh = 0, mm = 0, ss = 0, ms = 0;
+    int n = sscanf(iso, "%4d-%2d-%2dT%2d:%2d:%2d.%3d", &y, &m, &d, &hh, &mm, &ss, &ms);
+    if (n < 6) n = sscanf(iso, "%4d-%2d-%2dT%2d:%2d:%2d", &y, &m, &d, &hh, &mm, &ss);
+    if (n < 5) n = sscanf(iso, "%4d-%2d-%2dT%2d:%2d", &y, &m, &d, &hh, &mm);
+    if (n < 5) return 0;
+
+    int written = snprintf(out, outsz, "%02d.%02d.%04d | %02d:%02d", d, m, y, hh, mm);
+    return (written > 0 && (size_t)written < outsz) ? 1 : 0;
+}
 
 static u64 lastTick = 0;
-static float dt = 0.0f;       
-static float dtScale = 1.0f;  
+static float dt = 0.0f;
+static float dtScale = 1.0f;
 
 float scroll_speed2 = 0.5f;
 float bg_x2 = 0.0f;
@@ -74,7 +87,7 @@ void openCredits(void) {
     sceneManagerSwitchTo(SCENE_CREDITS);
 }
 
-static int initialVoiceAct = 0; 
+static int initialVoiceAct = 0;
 
 
 bool finishingOpenAnim = false;
@@ -85,7 +98,7 @@ float popupAnimTimer = 0.0f;
 float POPUP_ANIM_DURATION = 0.4f;
 
 float transitionTimer = 0.0f;
-float TRANSITION_DURATION = 1.6f; 
+float TRANSITION_DURATION = 1.6f;
 
 static C3D_Tex qrCodeTex;
 static C2D_Image qrCodeImg;
@@ -113,8 +126,8 @@ void swizzleTexture(uint8_t* dst, const uint8_t* src, int width, int height) {
     int rowblocks = (width >> 3);
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            u32 swizzledIndex = ((((y >> 3) * rowblocks + (x >> 3)) << 6) + 
-                                ((x & 1) | ((y & 1) << 1) | ((x & 2) << 1) | 
+            u32 swizzledIndex = ((((y >> 3) * rowblocks + (x >> 3)) << 6) +
+                                ((x & 1) | ((y & 1) << 1) | ((x & 2) << 1) |
                                 ((y & 2) << 2) | ((x & 4) << 2) | ((y & 4) << 3)));
             dst[swizzledIndex * 4]     = src[(y * width + x) * 4];
             dst[swizzledIndex * 4 + 1] = src[(y * width + x) * 4 + 1];
@@ -124,17 +137,17 @@ void swizzleTexture(uint8_t* dst, const uint8_t* src, int width, int height) {
     }
 }
 void drawNoPaczkasOverlay(C2D_Text* textObj, float x, float y) {
-    
+
     if (paczka_count == 0) {
         drawShadowedText(
             textObj,
-            x,      
-            y,      
-            0.6f,   
-            0.7f,   
-            0.7f,   
-            C2D_Color32(0xB1, 0xA2, 0x2F, 0xff), 
-            C2D_Color32(0xff, 0xff, 0xff, 0xff)  
+            x,
+            y,
+            0.6f,
+            0.7f,
+            0.7f,
+            C2D_Color32(0xB1, 0xA2, 0x2F, 0xff),
+            C2D_Color32(0xff, 0xff, 0xff, 0xff)
         );
     }
 }
@@ -143,35 +156,35 @@ void updateQrCodeTexture(const char* qrData) {
 
     uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
     uint8_t tempBuffer[qrcodegen_BUFFER_LEN_MAX];
-    
-    bool ok = qrcodegen_encodeText(qrData, tempBuffer, qrcode, qrcodegen_Ecc_LOW, 
-                                   qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX, 
+
+    bool ok = qrcodegen_encodeText(qrData, tempBuffer, qrcode, qrcodegen_Ecc_LOW,
+                                   qrcodegen_VERSION_MIN, qrcodegen_VERSION_MAX,
                                    qrcodegen_Mask_AUTO, true);
     if (!ok) return;
 
     int qrSize = qrcodegen_getSize(qrcode);
-    int texSize = 128; 
+    int texSize = 128;
 
     uint8_t* linearBuf = (uint8_t*)linearAlloc(texSize * texSize * 4);
     if (!linearBuf) return;
-    
+
     memset(linearBuf, 0, texSize * texSize * 4);
 
     int scale = texSize / qrSize;
     if (scale < 1) scale = 1;
-    
+
     int startX = (texSize - (qrSize * scale)) / 2;
     int startY = (texSize - (qrSize * scale)) / 2;
 
     for (int y = 0; y < qrSize; y++) {
         for (int x = 0; x < qrSize; x++) {
             bool isDark = qrcodegen_getModule(qrcode, x, y);
-            
+
             for (int dy = 0; dy < scale; dy++) {
                 for (int dx = 0; dx < scale; dx++) {
                     int px = startX + x * scale + dx;
                     int py = startY + y * scale + dy;
-                    
+
                     if (px < texSize && py < texSize) {
                         int idx = (py * texSize + px) * 4;
                         if (isDark) {
@@ -198,10 +211,10 @@ void updateQrCodeTexture(const char* qrData) {
     qrSubTex.width = texSize;
     qrSubTex.height = texSize;
     qrSubTex.left = 0.0f;
-    qrSubTex.top = 1.0f; 
+    qrSubTex.top = 1.0f;
     qrSubTex.right = 1.0f;
     qrSubTex.bottom = 0.0f;
-    
+
     qrCodeImg.tex = &qrCodeTex;
     qrCodeImg.subtex = &qrSubTex;
 }
@@ -238,13 +251,18 @@ void updatePaczkaText(void) {
     C2D_TextParse(&text_status, detailsTextBuf, sel->status);
     C2D_TextParse(&text_name, detailsTextBuf, sel->pickupPointName);
     C2D_TextParse(&text_addr, detailsTextBuf, addressBuffer);
-    C2D_TextParse(&date_addr, detailsTextBuf, sel->storedDate);
-    
+    char storedPretty[32];
+    const char* storedToShow = sel->storedDate;
+    if (formatIsoDateTime(sel->storedDate, storedPretty, sizeof(storedPretty))) {
+        storedToShow = storedPretty;
+    }
+    C2D_TextParse(&date_addr, detailsTextBuf, storedToShow);
+
     C2D_TextOptimize(&text_status);
     C2D_TextOptimize(&text_name);
     C2D_TextOptimize(&text_addr);
     C2D_TextOptimize(&date_addr);
-    
+
     cachedTextPaczkaIndex = selectedPaczkaIndex;
 }
 int va_offset2 = 0;
@@ -266,7 +284,7 @@ void sceneHomeMenuInit(void) {
     paczkasparsed = false;
     inDetailsMode = false;
     showingQrMode = false;
-    showOpenConfirmation = false; 
+    showOpenConfirmation = false;
     showPickupConfirmation = false;
     waitingForOpenCompletion = false;
     finishingOpenAnim = false;
@@ -279,7 +297,7 @@ void sceneHomeMenuInit(void) {
     cachedTextPaczkaIndex = -1;
     eventListScroll = 0.0f;
     eventListTargetScroll = 0.0f;
-    
+
     if (!musicisplaying) {
         CWAV* title = getCwav(1);
         if(title) {
@@ -290,11 +308,11 @@ void sceneHomeMenuInit(void) {
 
     inSettingsMode = false;
 
-    
-    detailsTextBuf = C2D_TextBufNew(4096);
-    eventListBuf = C2D_TextBufNew(4096); 
 
-    
+    detailsTextBuf = C2D_TextBufNew(4096);
+    eventListBuf = C2D_TextBufNew(4096);
+
+
     C2D_TextParse(&no_parcels_text, detailsTextBuf, "Brak Paczek :(");
     C2D_TextOptimize(&no_parcels_text);
 
@@ -315,10 +333,10 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
     u64 currentTick = svcGetSystemTick();
     dt = (float)(currentTick - lastTick) / CPU_TICKS_PER_MSEC / 1000.0f;
     lastTick = currentTick;
-    
+
     if (dt > 0.1f) dt = 0.1f;
     if (dt < 0.001f) dt = 0.001f;
-    
+
     dtScale = dt * 60.0f;
 
     flash_timer2 += dt;
@@ -341,17 +359,17 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
         flashActive2 = false;
         fadeTimer2 = FADE_DURATION2;
     }
-    
+
     if (!paczkas.done || waitingForOpenCompletion || finishingOpenAnim){
         spinnerAngle += spinnerSpeed * dt;
         if (spinnerAngle >= 360.0f) spinnerAngle -= 360.0f;
     }
 
     if (waitingForOpenCompletion) {
-        openingSpinnerAlpha += 3.0f * dt; 
+        openingSpinnerAlpha += 3.0f * dt;
         if (openingSpinnerAlpha > 1.0f) openingSpinnerAlpha = 1.0f;
     } else if (finishingOpenAnim) {
-        openingSpinnerAlpha -= 3.0f * dt; 
+        openingSpinnerAlpha -= 3.0f * dt;
         if (openingSpinnerAlpha <= 0.0f) {
             openingSpinnerAlpha = 0.0f;
             finishingOpenAnim = false;
@@ -363,48 +381,48 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
                     break;
             }
             showPickupConfirmation = true;
-            popupAnimTimer = 0.0f; 
-            playCwav(4, true); 
+            popupAnimTimer = 0.0f;
+            playCwav(4, true);
         }
     }
 
-    
+
     if (inSettingsMode) {
         touchPosition touch;
         hidTouchRead(&touch);
 
-        
+
         if (kDown & KEY_LEFT) {
             VOICEACT--;
             if (VOICEACT < 0) VOICEACT = 0;
-            va_offset2 = VOICEACT - 1; 
-            playCwav(3, true); 
+            va_offset2 = VOICEACT - 1;
+            playCwav(3, true);
         }
         if (kDown & KEY_RIGHT) {
             VOICEACT++;
-            if (VOICEACT > 3) VOICEACT = 3; 
-            va_offset2 = VOICEACT - 1; 
-            playCwav(3, true); 
+            if (VOICEACT > 3) VOICEACT = 3;
+            va_offset2 = VOICEACT - 1;
+            playCwav(3, true);
         }
 
-        
+
         if (kDown & KEY_TOUCH) {
 
-            if (VOICEACT == initialVoiceAct) { 
+            if (VOICEACT == initialVoiceAct) {
                 if (touch.py >= 110 && touch.py <= 140 && touch.px >= 90 && touch.px <= 230) {
                      inSettingsMode = false;
                      sceneManagerSwitchTo(SCENE_TUTORIAL);
                      playCwav(4, true);
                 }
             }
-            
+
 
             if (touch.py >= 180 && touch.py <= 210 && touch.px >= 110 && touch.px <= 210) {
                 inSettingsMode = false;
                 json_t *oproot = json_object();
 
                 json_object_set_new(oproot, "VA", json_integer(VOICEACT));
-                
+
                 json_dump_file(oproot, "/3ds/InPost3DS/opcje.json", JSON_COMPACT);
                 json_decref(oproot);
                 stopCwav(1);
@@ -418,7 +436,7 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
             json_t *oproot = json_object();
 
             json_object_set_new(oproot, "VA", json_integer(VOICEACT));
-            
+
             json_dump_file(oproot, "/3ds/InPost3DS/opcje.json", JSON_COMPACT);
             json_decref(oproot);
             stopCwav(1);
@@ -429,9 +447,9 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
             inSettingsMode = false;
             playCwav(4, true);
         }
-        return; 
+        return;
     }
-    
+
 
     if (!tryToGetPaczkas){
         getPaczkas();
@@ -452,9 +470,9 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
             parseFakePaczkas();
         else
             parsePaczkas((const char*)paczkas.data);
-        
+
         paczkasparsed = true;
-        updatePaczkaText(); 
+        updatePaczkaText();
     }
 
     if (validate_paczkomat.done && is_in_open_paczkomat_flow) {
@@ -471,7 +489,7 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
 
     if (waitingForOpenCompletion && open_paczkomat.done) {
         waitingForOpenCompletion = false;
-        finishingOpenAnim = true; 
+        finishingOpenAnim = true;
     }
 
     if (paczkasparsed) {
@@ -480,7 +498,7 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
         }
 
         if (showPickupConfirmation) {
-            if (popupAnimTimer >= POPUP_ANIM_DURATION * 0.5f) { 
+            if (popupAnimTimer >= POPUP_ANIM_DURATION * 0.5f) {
                 if (kDown & KEY_A) {
                     onPaczkaCollected();
                     tryToGetPaczkas = false;
@@ -489,7 +507,7 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
                     showPickupConfirmation = false;
                     inDetailsMode = false;
                     paczkas.done = false;
-                    playCwav(4, true); 
+                    playCwav(4, true);
                 }
                 if (kDown & KEY_B) {
                     showPickupConfirmation = false;
@@ -503,7 +521,7 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
                 if (kDown & KEY_A) {
                     requestOpenLocker();
                     showOpenConfirmation = false;
-                    playCwav(4, true); 
+                    playCwav(4, true);
                     is_in_open_paczkomat_flow = true;
                 }
                 if (kDown & KEY_B) {
@@ -514,15 +532,15 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
             return;
         }
 
-        
+
         touchPosition touch;
         hidTouchRead(&touch);
-        
+
 
         if (inDetailsMode) {
-            transitionTimer += 2.0f * dt; 
+            transitionTimer += 2.0f * dt;
             if (transitionTimer > TRANSITION_DURATION) transitionTimer = TRANSITION_DURATION;
-            
+
             if ((selectedPaczkaIndex != lastGeneratedQrIndex && paczka_count > 0) && !paczka_list[selectedPaczkaIndex].courier_paczka) {
                 updateQrCodeTexture(paczka_list[selectedPaczkaIndex].qrCode);
                 lastGeneratedQrIndex = selectedPaczkaIndex;
@@ -530,12 +548,12 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
 
             if (kDown & KEY_B) {
                 if (showingQrMode) {
-                    showingQrMode = false; 
+                    showingQrMode = false;
                 } else {
-                    inDetailsMode = false; 
+                    inDetailsMode = false;
                     is_in_open_paczkomat_flow = false;
                 }
-                return; 
+                return;
             }
 
             if (showingQrMode && osGetWifiStrength() > 0) {
@@ -551,7 +569,7 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
                         }
                         showOpenConfirmation = true;
                         popupAnimTimer = 0.0f;
-                        playCwav(4, true); 
+                        playCwav(4, true);
                     }
                 }
             } else {
@@ -559,7 +577,7 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
                     if (kDown & KEY_TOUCH) {
                         if (touch.px >= 270 && touch.px <= 310 && touch.py >= 10 && touch.py <= 50) {
                             showingQrMode = true;
-                            playCwav(4, true); 
+                            playCwav(4, true);
                         }
                     }
                 }
@@ -575,69 +593,69 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
                 } else {
                     isDraggingEvents = false;
                 }
-                
-                if (kHeld & KEY_UP) eventListTargetScroll += 300.0f * dt; 
+
+                if (kHeld & KEY_UP) eventListTargetScroll += 300.0f * dt;
                 if (kHeld & KEY_DOWN) eventListTargetScroll -= 300.0f * dt;
 
-                float contentHeight = paczka_list[selectedPaczkaIndex].eventCount * 45.0f; 
-                float minScroll = -(contentHeight - 200.0f); 
+                float contentHeight = paczka_list[selectedPaczkaIndex].eventCount * 45.0f;
+                float minScroll = -(contentHeight - 200.0f);
                 if (minScroll > 0) minScroll = 0;
-                
+
                 if (eventListTargetScroll > 0.0f) eventListTargetScroll = 0.0f;
                 if (eventListTargetScroll < minScroll) eventListTargetScroll = minScroll;
-                
+
                 float dampFactor = 0.2f * dtScale;
                 if (dampFactor > 1.0f) dampFactor = 1.0f;
                 eventListScroll += (eventListTargetScroll - eventListScroll) * dampFactor;
             }
 
         } else {
-            
+
             transitionTimer -= 2.0f * dt;
             if (transitionTimer < 0.0f) transitionTimer = 0.0f;
-            pkgAnimTimer += dt; 
+            pkgAnimTimer += dt;
 
             float transT = transitionTimer / TRANSITION_DURATION;
 
-            
+
             pressedBtnId = 0;
 
-            
+
             if (transT < 0.1f) {
-                
+
                 if (kHeld & KEY_TOUCH) {
                     if (touch.px >= 5 && touch.px <= 70 && touch.py >= 5 && touch.py <= 45) pressedBtnId = 1;
                     else if (touch.px >= 125 && touch.px <= 195 && touch.py >= 5 && touch.py <= 45) pressedBtnId = 2;
                     else if (touch.px >= 250 && touch.px <= 315 && touch.py >= 5 && touch.py <= 45) pressedBtnId = 3;
                 }
 
-                
+
                 if (kDown & KEY_TOUCH) {
-                    
+
                     if ((touch.px >= 5 && touch.px <= 70 && touch.py >= 5 && touch.py <= 45) && osGetWifiStrength() > 0) {
                         tryToGetPaczkas = false;
                         paczkas.done = false;
                         paczkasparsed = false;
-                        
-                        
-                        paczka_count = 0;       
-                        pkgAnimTimer = 0.0f;    
-                        
-                        
+
+
+                        paczka_count = 0;
+                        pkgAnimTimer = 0.0f;
+
+
                         playCwav(4, true);
                     }
 
-                    
+
                     if (touch.px >= 125 && touch.px <= 195 && touch.py >= 5 && touch.py <= 45) {
                         playCwav(4, true);
                         stopCwav(1);
                         openCredits();
                     }
 
-                    
+
                     if (touch.px >= 250 && touch.px <= 315 && touch.py >= 5 && touch.py <= 45) {
                         inSettingsMode = true;
-                        initialVoiceAct = VOICEACT; 
+                        initialVoiceAct = VOICEACT;
                         playCwav(4, true);
                     }
                 }
@@ -650,45 +668,45 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
                 if (kDown & KEY_LEFT) {
                     selectedPaczkaIndex--;
                     if (selectedPaczkaIndex < 0) selectedPaczkaIndex = 0;
-                    playCwav(3, true); 
+                    playCwav(3, true);
                     changed = true;
                 }
                 if (kDown & KEY_RIGHT) {
                     selectedPaczkaIndex++;
                     if (selectedPaczkaIndex >= paczka_count) selectedPaczkaIndex = paczka_count - 1;
-                    playCwav(3, true); 
+                    playCwav(3, true);
                     changed = true;
                 }
-                
+
                 if (changed) {
                     updatePaczkaText();
                 }
 
                 if (kDown & KEY_A) {
                     inDetailsMode = true;
-                    showingQrMode = false; 
+                    showingQrMode = false;
                     eventListScroll = 0.0f;
                     eventListTargetScroll = 0.0f;
-                    playCwav(4, true); 
+                    playCwav(4, true);
 
                     if (paczka_count > 0) {
                         Paczka *sel = &paczka_list[selectedPaczkaIndex];
                         if (!sel->courier_paczka && strlen(sel->imageUrl) > 0) {
                             getPaczkomatImage(sel->imageUrl);
                         } else {
-                            obrazekdone = false; 
+                            obrazekdone = false;
                         }
                     }
                 }
 
                 float spacing = 114.0f;
-                float screenCenterX = 160.0f; 
+                float screenCenterX = 160.0f;
                 float startX = 25.0f;
                 bottomCameraTargetX = (startX + selectedPaczkaIndex * spacing) - screenCenterX;
                 float maxCameraX = (paczka_count - 1) * spacing;
                 if (bottomCameraTargetX < 0.0f) bottomCameraTargetX = 0.0f;
                 if (bottomCameraTargetX > maxCameraX) bottomCameraTargetX = maxCameraX;
-                
+
                 float dampFactor = 0.15f * dtScale;
                 if (dampFactor > 1.0f) dampFactor = 1.0f;
                 bottomCameraX += (bottomCameraTargetX - bottomCameraX) * dampFactor;
@@ -699,8 +717,8 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
 
 void drawSpinner(float cx, float cy, float alphaVal) {
     if (alphaVal <= 0.0f) return;
-    float bigRadius = 40.0f; 
-    float dotSize = 8.0f; 
+    float bigRadius = 40.0f;
+    float dotSize = 8.0f;
     float shadowOffset = 2.0f;
     for (int i = 0; i < SPINNER_DOT_COUNT; i++) {
         float angleDeg = spinnerAngle + (360.0f / SPINNER_DOT_COUNT) * i;
@@ -717,10 +735,10 @@ void drawSpinner(float cx, float cy, float alphaVal) {
 }
 
 void drawHomeSceneContent(float offset, float transT, float finalZY) {
-    
+
     C2D_DrawImageAt(bg_top, bg_x2 - 560 + offset, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
     C2D_DrawImageAt(bg_top, bg_x2 + offset, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
-    
+
 
     if (paczkasparsed) {
         if (finalZY > -230.0f) {
@@ -730,47 +748,47 @@ void drawHomeSceneContent(float offset, float transT, float finalZY) {
 
         if (paczka_count > 0 && finalZY > -230.0f) {
             float centerScreenX = 200.0f;
-            float stampVisualCenterY = finalZY + 120.0f; 
+            float stampVisualCenterY = finalZY + 120.0f;
             float scaleStatus = 0.5f;
-            float scaleName = 0.65f; 
+            float scaleName = 0.65f;
             float scaleAddr = 0.5f;
-            
-            u8 textAlpha = (u8)(255.0f * (1.0f - (transT * 1.2f))); 
+
+            u8 textAlpha = (u8)(255.0f * (1.0f - (transT * 1.2f)));
             if (textAlpha > 0) {
                 u32 textColor = C2D_Color32(0, 0, 0, textAlpha);
 
                 float wD, hD;
                 C2D_TextGetDimensions(&text_status, scaleStatus, scaleStatus, &wD, &hD);
                 C2D_DrawText(&text_status, C2D_WithColor, centerScreenX - (wD / 2.0f), stampVisualCenterY - 35.0f, 0.6f, scaleStatus, scaleStatus, textColor);
-                
+
                 float wS, hS;
                 C2D_TextGetDimensions(&date_addr, scaleStatus, scaleStatus, &wS, &hS);
                 C2D_DrawText(&date_addr, C2D_WithColor, centerScreenX - (wS / 2.0f), stampVisualCenterY - 65.0f, 0.6f, scaleStatus, scaleStatus, textColor);
-                
+
                 float wN, hN;
                 C2D_TextGetDimensions(&text_name, scaleName, scaleName, &wN, &hN);
                 C2D_DrawText(&text_name, C2D_WithColor, centerScreenX - (wN / 2.0f), stampVisualCenterY - 5.0f, 0.6f, scaleName, scaleName, textColor);
-                
+
                 float wA, hA;
                 C2D_TextGetDimensions(&text_addr, scaleAddr, scaleAddr, &wA, &hA);
                 C2D_DrawText(&text_addr, C2D_WithColor, centerScreenX - (wA / 2.0f), stampVisualCenterY + 25.0f, 0.6f, scaleAddr, scaleAddr, textColor);
             }
         } else {
-            
+
             if (finalZY > -230.0f) {
                  drawNoPaczkasOverlay(&no_parcels_text, 200.0f, finalZY + 110.0f);
             }
         }
 
         if (transT > 0.0f) {
-            float t = fminf(transT * 1.2f, 1.0f); 
+            float t = fminf(transT * 1.2f, 1.0f);
             float ease = easeOutCubic(t);
             float centerX = 200.0f;
             float baseY   = 120.0f;
             float slideX  = 40.0f;
             float historyX = centerX - (showingQrMode ? slideX * ease : slideX * (1.0f - ease));
             float historyAlphaVal = showingQrMode ? (1.0f - ease) : ease;
-            
+
             if (historyAlphaVal < 0.0f) historyAlphaVal = 0.0f;
             if (historyAlphaVal > 1.0f) historyAlphaVal = 1.0f;
 
@@ -779,7 +797,7 @@ void drawHomeSceneContent(float offset, float transT, float finalZY) {
                 float actualH = (float)kuponkurwa.subtex->height;
                 if (actualW < 1.0f) actualW = 1.0f;
                 if (actualH < 1.0f) actualH = 1.0f;
-                float maxW = 360.0f; 
+                float maxW = 360.0f;
                 float maxH = 200.0f;
                 float scaleX = maxW / actualW;
                 float scaleY = maxH / actualH;
@@ -787,8 +805,8 @@ void drawHomeSceneContent(float offset, float transT, float finalZY) {
                 if (finalScale > 1.0f) finalScale = 1.0f;
                 float drawW = actualW * finalScale;
                 float drawH = actualH * finalScale;
-                float drawX = historyX - (drawW / 2.0f); 
-                float drawY = 120.0f - (drawH / 2.0f); 
+                float drawX = historyX - (drawW / 2.0f);
+                float drawY = 120.0f - (drawH / 2.0f);
 
                 C2D_ImageTint imgT;
                 C2D_AlphaImageTint(&imgT, historyAlphaVal);
@@ -814,17 +832,17 @@ void drawHomeSceneContent(float offset, float transT, float finalZY) {
             }
         }
     }
-    
-    
+
+
     if (showOpenConfirmation || showPickupConfirmation) {
         float pT = popupAnimTimer / POPUP_ANIM_DURATION;
         if (pT > 1.0f) pT = 1.0f;
-        float alphaFactor = pT; 
+        float alphaFactor = pT;
         u8 dimAlpha = (u8)(150.0f * alphaFactor);
         C2D_DrawRectSolid(0, 0, 0.96f, 400, 240, C2D_Color32(0, 0, 0, dimAlpha));
     }
-    
-    
+
+
     if (flashActive2) {
         float fadeProgress = fadeTimer2 / FADE_DURATION2;
         if (fadeProgress > 1.0f) fadeProgress = 1.0f;
@@ -836,10 +854,10 @@ void drawHomeSceneContent(float offset, float transT, float finalZY) {
 void drawFancyButton(float x, float y, float w, float h, const char* text, bool isPressed, float alpha) {
     if (alpha <= 0.0f) return;
 
-    
+
     float scale = isPressed ? 0.95f : 1.0f;
-    
-    
+
+
     float centerX = x + (w / 2.0f);
     float centerY = y + (h / 2.0f);
     float scaledW = w * scale;
@@ -850,45 +868,45 @@ void drawFancyButton(float x, float y, float w, float h, const char* text, bool 
     u8 a = (u8)(255 * alpha);
     u8 shadowA = (u8)(100 * alpha);
 
-    
+
     if (!isPressed) {
         C2D_DrawRectSolid(finalX + 2.0f, finalY + 2.0f, 0.9f, scaledW, scaledH, C2D_Color32(0, 0, 0, shadowA));
     }
 
-    
+
     u32 borderColor = C2D_Color32(255, 204, 0, a);
     C2D_DrawRectSolid(finalX - 1.0f, finalY - 1.0f, 0.9f, scaledW + 2.0f, scaledH + 2.0f, borderColor);
 
-    
+
     u32 bgColor = isPressed ? C2D_Color32(234, 234, 234, a) : C2D_Color32(254, 254, 254, a);
     C2D_DrawRectSolid(finalX, finalY, 0.9f, scaledW, scaledH, bgColor);
 
-    
+
     C2D_TextBufClear(eventListBuf);
     C2D_Text btnTxt;
     C2D_TextParse(&btnTxt, eventListBuf, text);
     C2D_TextOptimize(&btnTxt);
 
-    
+
     float txtW, txtH;
     C2D_TextGetDimensions(&btnTxt, 0.5f, 0.5f, &txtW, &txtH);
     u32 txtColor = C2D_Color32(205, 154, 0, a);
-    
+
     C2D_DrawText(&btnTxt, C2D_WithColor, centerX - (txtW / 2.0f), centerY - (txtH / 2.0f), 0.95f, 0.5f, 0.5f, txtColor);
 }
 void sceneHomeMenuRender(void) {
-    
-    bg_x2 -= scroll_speed2 * dtScale;
-    if (bg_x2 <= -80.0f) bg_x2 += 80.0f; 
 
-    
+    bg_x2 -= scroll_speed2 * dtScale;
+    if (bg_x2 <= -80.0f) bg_x2 += 80.0f;
+
+
     float transT = transitionTimer / TRANSITION_DURATION;
     if (transT > 1.0f) transT = 1.0f;
     if (transT < 0.0f) transT = 0.0f;
 
     float zAnimDuration = 0.8f;
-    float zStartY = -240.0f; 
-    float zTargetY = 0.0f;   
+    float zStartY = -240.0f;
+    float zTargetY = 0.0f;
     float currentZY = zStartY;
 
     if (pkgAnimTimer > 0.0f) {
@@ -900,13 +918,13 @@ void sceneHomeMenuRender(void) {
 
     float flyUpOffset = 0.0f;
     if (transT > 0.0f) {
-        float upEase = transT * transT * transT; 
-        flyUpOffset = -280.0f * upEase;    
+        float upEase = transT * transT * transT;
+        flyUpOffset = -280.0f * upEase;
     }
 
     float finalZY = currentZY + flyUpOffset;
 
-    
+
     C2D_SceneBegin(left);
     C2D_TargetClear(left, C2D_Color32(0, 0, 0, 255));
     drawHomeSceneContent(0.0f, transT, finalZY);
@@ -917,34 +935,34 @@ void sceneHomeMenuRender(void) {
         drawHomeSceneContent(slider * 5.0f, transT, finalZY);
     }
 
-    
+
     C2D_SceneBegin(bottom);
     C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255));
     C2D_DrawImageAt(bg_bottom, bg_x2, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
-    
+
     if (!paczkas.done) {
         drawSpinner(160.0f, 120.0f, 1.0f);
     }
 
 
     if (!inDetailsMode && transT < 0.1f) {
-        
-        
+
+
         float btnAnimT = pkgAnimTimer / 0.5f;
         if (btnAnimT > 1.0f) btnAnimT = 1.0f;
         float ease = easeOutCubic(btnAnimT);
-        
-        
+
+
         float yOffset = 20.0f * (1.0f - ease);
         float btnAlpha = ease;
 
-        
+
         drawFancyButton(5.0f, 5.0f + yOffset, 65.0f, 40.0f, "Odśwież", (pressedBtnId == 1), btnAlpha);
 
-        
+
         drawFancyButton(125.0f, 5.0f + yOffset, 70.0f, 40.0f, "Credits", (pressedBtnId == 2), btnAlpha);
 
-        
+
         drawFancyButton(250.0f, 5.0f + yOffset, 65.0f, 40.0f, "Ustawienia", (pressedBtnId == 3), btnAlpha);
     }
     if (paczkasparsed && paczka_count > 0) {
@@ -952,17 +970,17 @@ void sceneHomeMenuRender(void) {
         if (transT > 0.0f) listAlpha = 1.0f - transT;
 
         if (listAlpha > 0.05f) {
-            float spacing = 114.0f; 
+            float spacing = 114.0f;
             float startX = 25.0f;
             float entryAnimDuration = 0.6f;
-            float entryStaggerDelay = 0.15f; 
-            float startY = 260.0f; 
-            float targetY = 80.0f; 
+            float entryStaggerDelay = 0.15f;
+            float startY = 260.0f;
+            float targetY = 80.0f;
 
             for (int i = 0; i < paczka_count; i++) {
                 float currentY = startY;
                 float myTime = pkgAnimTimer - (i * entryStaggerDelay);
-                float yPos = startY; 
+                float yPos = startY;
                 float alpha = 0.0f;
 
                 if (myTime > 0.0f) {
@@ -970,12 +988,12 @@ void sceneHomeMenuRender(void) {
                     if (t > 1.0f) t = 1.0f;
                     float baseEase = easeOutCubic(t);
                     yPos = startY - ((startY - targetY) * baseEase);
-                    alpha = baseEase; 
+                    alpha = baseEase;
                 }
 
                 float flyDownOffset = 0.0f;
                 if (transT > 0.0f) {
-                     float ease = transT * transT * transT; 
+                     float ease = transT * transT * transT;
                      flyDownOffset = 200.0f * ease;
                      alpha *= (1.0f - ease);
                 }
@@ -1000,27 +1018,27 @@ void sceneHomeMenuRender(void) {
 
     if (transT > 0.0f) {
         float fInv = 1.0f - transT;
-        float detailsEnterEase = 1.0f - (fInv * fInv * fInv); 
-        float detailsYOffset = 240.0f * (1.0f - detailsEnterEase); 
-        
+        float detailsEnterEase = 1.0f - (fInv * fInv * fInv);
+        float detailsYOffset = 240.0f * (1.0f - detailsEnterEase);
+
         Paczka *p = &paczka_list[selectedPaczkaIndex];
 
         if (showingQrMode) {
-            float qrStartY = 240.0f; 
-            float qrTargetY = 56.0f; 
+            float qrStartY = 240.0f;
+            float qrTargetY = 56.0f;
             float currentQrY = qrStartY - ((qrStartY - qrTargetY) * detailsEnterEase);
-            
+
             u8 qrAlpha = (u8)(255.0f * detailsEnterEase);
             u32 qrTintVal = C2D_Color32(255, 255, 255, qrAlpha);
             u32 qrTintVal2 = C2D_Color32(0, 0, 0, 120);
-            
+
             float cardSize = 138.0f;
             float cardX = 160.0f - (cardSize / 2.0f);
-            
+
             if (!p->courier_paczka && osGetWifiStrength() > 0) {
                 C2D_DrawRectSolid(cardX + 5.0f, currentQrY - 17.50f, 0.8f, cardSize, cardSize, qrTintVal2);
                 C2D_DrawRectSolid(cardX, currentQrY - 25.0f, 0.8f, cardSize, cardSize, qrTintVal);
-                
+
                 if (qrTexInitialized) {
                     float qrX = 160.0f - (128.0f / 2.0f);
                     C2D_DrawImageAt(qrCodeImg, qrX, currentQrY - 20.0f, 0.9f, NULL, 1.0f, 1.0f);
@@ -1035,26 +1053,26 @@ void sceneHomeMenuRender(void) {
                 float drawX = 160.0f - (imgW / 2.0f);
                 float drawY = currentBtnY - (imgH / 2.0f);
 
-                u8 shadowAlpha = (u8)(100.0f * detailsEnterEase); 
+                u8 shadowAlpha = (u8)(100.0f * detailsEnterEase);
                 C2D_ImageTint shadowTint;
                 C2D_PlainImageTint(&shadowTint, C2D_Color32(0, 0, 0, shadowAlpha), 1.0f);
                 C2D_DrawImageAt(otworz_zdalnie_button, drawX + 4.0f, drawY + 4.0f, 0.89f, &shadowTint, 1.0f, 1.0f);
                 C2D_ImageTint btnTint;
-                C2D_AlphaImageTint(&btnTint, detailsEnterEase); 
+                C2D_AlphaImageTint(&btnTint, detailsEnterEase);
                 C2D_DrawImageAt(otworz_zdalnie_button, drawX, drawY, 0.9f, &btnTint, 1.0f, 1.0f);
             }
 
         } else {
             u8 listAlpha = (u8)(255.0f * detailsEnterEase);
             float scrollBaseY = detailsYOffset + eventListScroll;
-            u32 gradTop = C2D_Color32(255, 255, 255, listAlpha); 
+            u32 gradTop = C2D_Color32(255, 255, 255, listAlpha);
             u32 gradBot = C2D_Color32(255, 255, 140, listAlpha);
             C2D_DrawRectangle(0, detailsYOffset, 0.6f, 320, 240, gradTop, gradTop, gradBot, gradBot);
 
             u32 dateColor = C2D_Color32(100, 100, 100, listAlpha);
             u32 nameColor = C2D_Color32(0, 0, 0, listAlpha);
-            
-            C2D_TextBufClear(eventListBuf); 
+
+            C2D_TextBufClear(eventListBuf);
 
             float listStartOffset = 10.0f;
 
@@ -1083,12 +1101,17 @@ void sceneHomeMenuRender(void) {
             for (int i = 0; i < p->eventCount; i++) {
                 float itemY = listY + (i * 45.0f);
                 if (itemY < detailsYOffset - 40.0f || itemY > 250.0f) continue;
-                
-                C2D_TextBufClear(eventListBuf); 
+
+                C2D_TextBufClear(eventListBuf);
 
                 C2D_Text dateTxt, nameTxt;
 
-                C2D_TextParse(&dateTxt, eventListBuf, p->events[i].date);
+                char eventPretty[32];
+                const char* eventToShow = p->events[i].date;
+                if (formatIsoDateTime(p->events[i].date, eventPretty, sizeof(eventPretty))) {
+                    eventToShow = eventPretty;
+                }
+                C2D_TextParse(&dateTxt, eventListBuf, eventToShow);
                 C2D_TextOptimize(&dateTxt);
                 C2D_DrawText(&dateTxt, C2D_WithColor, 10.0f, itemY, 0.7f, 0.45f, 0.45f, dateColor);
 
