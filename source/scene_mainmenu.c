@@ -178,7 +178,7 @@ void sceneMainMenuInit(void) {
         C2D_TextParse(
         &menu_Text[2],
         MainMenu,
-        "Ver 1.0");
+        "Ver 1.0.1");
     #endif              
 }
 
