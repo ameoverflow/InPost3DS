@@ -3,6 +3,8 @@
 #define SPRITES_H
 #include <citro2d.h>
 #include <stdlib.h>
+#include "data.h"
+
 typedef struct {
     int currentFrame;
     u64 lastFrameTime;
@@ -17,36 +19,64 @@ typedef struct {
 } SpriteAnimState;
 
 
-extern C2D_SpriteSheet testsheet, logo, fridge, backgrounds, logo;
-extern C2D_Image test, fridge_image, bg_top, bg_bottom, logo3ds;
+extern GFX_IMAGE* test;
+extern GFX_IMAGE* fridge_image;
+extern GFX_IMAGE* bg_top;
+extern GFX_IMAGE* bg_bottom;
+extern GFX_IMAGE* logo3ds;
 
-extern C2D_SpriteSheet paczka;
-extern C2D_Image paczka_closed, znaczek, paczka_sel, otworz_zdalnie_button;
 
-extern C2D_SpriteSheet placeholder_chan;
-extern C2D_Image chan_placeholder, kun_placeholder;
 
-extern C2D_SpriteSheet chan;
-extern C2D_Image chan_excited, chan_idle_speak, chan_idle, chan_diss_speak, chan_diss;
+extern GFX_IMAGE* paczka_closed;
+extern GFX_IMAGE* znaczek;
+extern GFX_IMAGE* paczka_sel;
+extern GFX_IMAGE* otworz_zdalnie_button;
 
-extern C2D_SpriteSheet kun;
-extern C2D_Image kun_excited, kun_idle_speak, kun_idle, kun_diss_speak, kun_diss;
 
-extern C2D_SpriteSheet arhn;
-extern C2D_Image arhn_siema, arhn_explain, arhn_diss;
 
-extern C2D_SpriteSheet pakuj;
-extern C2D_Image sie_do_wiezienia;
+extern GFX_IMAGE* chan_placeholder;
+extern GFX_IMAGE* kun_placeholder;
 
-extern C2D_SpriteSheet tutorial0, tutorial0_bot;
-extern C2D_Image tut0_0, tut0_1, tut0_2, tut0_3, tut0_bot0, tut0_bot1;
 
-extern C2D_SpriteSheet tutorial1, tutorial1_bot;
-extern C2D_Image tut1_0, tut1_bot0, tut1_bot1;
-extern C2D_SpriteSheet tutorial2;
-extern C2D_Image tut2_0;
-extern C2D_SpriteSheet tutorial3;
-extern C2D_Image tut3_0;
+extern GFX_IMAGE* arhn_siema;
+extern GFX_IMAGE* arhn_explain;
+extern GFX_IMAGE* arhn_diss;
+
+
+extern GFX_IMAGE* chan_excited;
+extern GFX_IMAGE* chan_idle_speak;
+extern GFX_IMAGE* chan_idle;
+extern GFX_IMAGE* chan_diss_speak;
+extern GFX_IMAGE* chan_diss;
+
+
+extern GFX_IMAGE* kun_excited;
+extern GFX_IMAGE* kun_idle_speak;
+extern GFX_IMAGE* kun_idle;
+extern GFX_IMAGE* kun_diss_speak;
+extern GFX_IMAGE* kun_diss;
+
+
+extern GFX_IMAGE* sie_do_wiezienia;
+
+
+extern GFX_IMAGE* tut0_0;
+extern GFX_IMAGE* tut0_1;
+extern GFX_IMAGE* tut0_2;
+extern GFX_IMAGE* tut0_3;
+extern GFX_IMAGE* tut0_bot0;
+extern GFX_IMAGE* tut0_bot1;
+
+
+extern GFX_IMAGE* tut1_0;
+extern GFX_IMAGE* tut1_bot0;
+extern GFX_IMAGE* tut1_bot1;
+
+
+extern GFX_IMAGE* tut2_0;
+
+
+extern GFX_IMAGE* tut3_0;
 
 void ResetAnimState(SpriteAnimState* anim);
 void PlaySprite(float scale, C2D_SpriteSheet frames, int framerate, int framecount, float x, float y, SpriteAnimState* anim, int direction, float depth);

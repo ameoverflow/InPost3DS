@@ -16,6 +16,7 @@
 #include "inpost_api.h"
 #include "scene_debug.h"
 #include "scene_init.h"
+#include "drawing.h"
 #define MAX_STARS 64
 
 bool musicisplaying = false;
@@ -42,9 +43,9 @@ float bounceScale = 1.2f;
 float bounceVelocity = -0.01f;
 bool bounceActive;
 bool logoactive = false;
-C2D_TextBuf MainMenu;
+GFX_TEXTBUF MainMenu;
 
-C2D_Text menu_Text[50];
+GFX_TEXT menu_Text[50];
 float how_much_in_flash;
 bool flashActive;
 float FADE_DURATION;
@@ -95,10 +96,10 @@ void sceneMainMenuInit(void) {
     lastTick = svcGetSystemTick();
     dt = 0.0f;
     
-	MainMenu = C2D_TextBufNew(2048);
-    C2D_TextBufClear(MainMenu);  
-	C2D_TextParse(&menu_Text[0], MainMenu, "Wciśnij A");
-	C2D_TextParse(&menu_Text[1], MainMenu, "Wprowadź Numer Telefonu (+48)");
+	MainMenu = GFX_TextBufNew(2048);
+    GFX_TextBufClear(MainMenu);  
+	GFX_TextParse(&menu_Text[0], MainMenu, "Wciśnij A");
+	GFX_TextParse(&menu_Text[1], MainMenu, "Wprowadź Numer Telefonu (+48)");
     
     
     getCwav(1); 
@@ -169,13 +170,13 @@ void sceneMainMenuInit(void) {
         }
 	}
     #ifdef DEBUG
-        C2D_TextParse(
+        GFX_TextParse(
         &menu_Text[2],
         MainMenu,
         "Build date: " __DATE__ " " __TIME__
         " (DEBUG BUILD)");
     #else
-        C2D_TextParse(
+        GFX_TextParse(
         &menu_Text[2],
         MainMenu,
         "Ver 1.0.1");
@@ -290,7 +291,7 @@ void sceneMainMenuUpdate(uint32_t kDown, uint32_t kHeld) {
             Sent_NRTEL = true;
             bounceTextActive = true;
             bounceTextTime = 0.0f;
-            C2D_TextParse(&menu_Text[1], MainMenu, "Wprowadź Kod SMS");
+            GFX_TextParse(&menu_Text[1], MainMenu, "Wprowadź Kod SMS");
             if (VOICEACT != 0) {
                 playCwav(30 + (va_offset * 26), true);
             }
@@ -338,12 +339,12 @@ void sceneMainMenuUpdate(uint32_t kDown, uint32_t kHeld) {
     }
 }
 void drawMainMenuTop(float offset) {
-	C2D_DrawImageAt(bg_top, bg_x - 560 + offset, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
-    C2D_DrawImageAt(bg_top, bg_x + offset, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
+	GFX_DrawImageAt(bg_top, bg_x - 560 + offset, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
+    GFX_DrawImageAt(bg_top, bg_x + offset, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
 
     if (logoactive) {
-		float w = logo3ds.subtex->width * bounceScale;
-		float h = logo3ds.subtex->height * bounceScale;
+		float w = logo3ds->width * bounceScale;
+		float h = logo3ds->height * bounceScale;
 		float curX = x_image;
         
         if (!Switching_To_MainScreen) {
@@ -353,8 +354,8 @@ void drawMainMenuTop(float offset) {
 		C2D_ImageTint shadowTint;
 		C2D_PlainImageTint(&shadowTint, C2D_Color32(0, 0, 0, 110), 1.0f);
 
-		C2D_DrawImageAt(logo3ds, curX - 4.0f, ((240.0f - h) / 2.0f) + 4.0f, 1.0f, &shadowTint, bounceScale, bounceScale);
-		C2D_DrawImageAt(logo3ds, curX, (240.0f - h) / 2.0f, 1.0f, NULL, bounceScale, bounceScale);
+		GFX_DrawImageAt(logo3ds, curX - 4.0f, ((240.0f - h) / 2.0f) + 4.0f, 1.0f, &shadowTint, bounceScale, bounceScale);
+		GFX_DrawImageAt(logo3ds, curX, (240.0f - h) / 2.0f, 1.0f, NULL, bounceScale, bounceScale);
 	}
 
     if (flashActive) {
@@ -363,22 +364,23 @@ void drawMainMenuTop(float offset) {
 
 		float fadeValue = 1.0f - fadeProgress; 
 		uint8_t alpha = (uint8_t)(fadeValue * 255.0f);
-		C2D_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, alpha));
+		GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, alpha));
 	}
 
     if (Show_PLZ_LOGIN) {
 		float y = easeOut(400.0f, 100.0f, easet);
-		drawShadowedText(&menu_Text[1], 200.0f - 4 + offset, y + 4, 1.0f, bounceTextScale, bounceTextScale, C2D_Color32(0x00, 0x00, 0x00, 0x2e), C2D_Color32(0x00, 0x00, 0x00, 0x2e));
-		drawShadowedText(&menu_Text[1], 200.0f + offset, y, 1.0f, bounceTextScale, bounceTextScale, C2D_Color32(0xB1, 0xA2, 0x2F, 0xff), C2D_Color32(0xff, 0xff, 0xff, 0xff));
+		GFX_DrawShadowedText(&menu_Text[1], 200.0f - 4 + offset, y + 4, 1.0f, bounceTextScale, bounceTextScale, GFX_ALIGN_CENTER, C2D_Color32(0x00, 0x00, 0x00, 0x2e), C2D_Color32(0x00, 0x00, 0x00, 0x2e));
+		GFX_DrawShadowedText(&menu_Text[1], 200.0f + offset, y, 1.0f, bounceTextScale, bounceTextScale, GFX_ALIGN_CENTER, C2D_Color32(0xB1, 0xA2, 0x2F, 0xff), C2D_Color32(0xff, 0xff, 0xff, 0xff));
 	}
     
-    drawShadowedText_noncentered(&menu_Text[2], 10.0f, 220, 1.0f, 0.5f, 0.5f, C2D_Color32(0xB1, 0xA2, 0x2F, 0xff), C2D_Color32(0xff, 0xff, 0xff, 0xff));
+    // todo: zrobić to
+    //drawShadowedText_noncentered(&menu_Text[2], 10.0f, 220, 1.0f, 0.5f, 0.5f, C2D_Color32(0xB1, 0xA2, 0x2F, 0xff), C2D_Color32(0xff, 0xff, 0xff, 0xff));
 
     if (showTutorialConfirmation) {
         float pT = tutorialPopupAnimTimer / TUTORIAL_POPUP_DURATION;
         if (pT > 1.0f) pT = 1.0f;
         u8 dimAlpha = (u8)(150.0f * pT);
-        C2D_DrawRectSolid(0, 0, 0.98f, 400, 240, C2D_Color32(0, 0, 0, dimAlpha));
+        GFX_DrawRectSolid(0, 0, 0.98f, 400, 240, C2D_Color32(0, 0, 0, dimAlpha));
     }
 }
 
@@ -442,7 +444,7 @@ void sceneMainMenuRender(void) {
 
     C2D_SceneBegin(bottom);
 	C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255));
-	C2D_DrawImageAt(bg_bottom, bg_x, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
+	GFX_DrawImageAt(bg_bottom, bg_x, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
 	
     if (logoactive) {
 		if (Switching_To_MainScreen) {
@@ -450,7 +452,7 @@ void sceneMainMenuRender(void) {
 		} else {
 			x_text = 160.0f;
 		}
-		drawShadowedText(&menu_Text[0], x_text, 100.0f, 0.5f, 1.5f, 1.5f, C2D_Color32(0xB1, 0xA2, 0x2F, dissapeared ? 0xff : 0x00), C2D_Color32(0xff, 0xff, 0xff, dissapeared ? 0xff : 0x00));
+		GFX_DrawShadowedText(&menu_Text[0], x_text, 100.0f, 0.5f, 1.5f, 1.5f, GFX_ALIGN_CENTER, C2D_Color32(0xB1, 0xA2, 0x2F, dissapeared ? 0xff : 0x00), C2D_Color32(0xff, 0xff, 0xff, dissapeared ? 0xff : 0x00));
 	}
 
     if (showTutorialConfirmation) {
@@ -460,7 +462,7 @@ void sceneMainMenuRender(void) {
         float alphaFactor = pT;
 
         u8 dimAlpha = (u8)(150.0f * alphaFactor);
-        C2D_DrawRectSolid(0, 0, 0.98f, 320, 240, C2D_Color32(0, 0, 0, dimAlpha));
+        GFX_DrawRectSolid(0, 0, 0.98f, 320, 240, C2D_Color32(0, 0, 0, dimAlpha));
         
         float mwW = 260.0f;
         float mwH = 100.0f;
@@ -471,29 +473,29 @@ void sceneMainMenuRender(void) {
         float curY = (240.0f - curH) / 2.0f;
 
         u8 bgAlpha = (u8)(255.0f * alphaFactor);
-        C2D_DrawRectSolid(curX, curY, 0.99f, curW, curH, C2D_Color32(255, 255, 255, bgAlpha));
+        GFX_DrawRectSolid(curX, curY, 0.99f, curW, curH, C2D_Color32(255, 255, 255, bgAlpha));
         
-        C2D_TextBuf popupBuf = C2D_TextBufNew(512);
-        C2D_Text qText, optText;
+        GFX_TEXTBUF popupBuf = GFX_TextBufNew(512);
+        GFX_TEXT qText, optText;
 
-        C2D_TextParse(&qText, popupBuf, "Czy pierwszy raz korzystasz z Inpost3DS?");
-        C2D_TextParse(&optText, popupBuf, "(A) Tak    (B) Nie");
+        GFX_TextParse(&qText, popupBuf, "Czy pierwszy raz korzystasz z Inpost3DS?");
+        GFX_TextParse(&optText, popupBuf, "(A) Tak    (B) Nie");
         
-        C2D_TextOptimize(&qText);
-        C2D_TextOptimize(&optText);
+        GFX_TextOptimize(&qText);
+        GFX_TextOptimize(&optText);
         
         float tScale = 0.5f * ease;
         if (tScale < 0) tScale = 0;
 
         float wQ, hQ, wO, hO;
-        C2D_TextGetDimensions(&qText, tScale, tScale, &wQ, &hQ);
-        C2D_TextGetDimensions(&optText, tScale, tScale, &wO, &hO);
+        GFX_TextGetDimensions(&qText, tScale, tScale, &wQ, &hQ);
+        GFX_TextGetDimensions(&optText, tScale, tScale, &wO, &hO);
         
         u32 txtColor = C2D_Color32(0, 0, 0, bgAlpha);
-        C2D_DrawText(&qText, C2D_WithColor, 160.0f - (wQ/2), curY + (25.0f * ease), 1.0f, tScale, tScale, txtColor);
-        C2D_DrawText(&optText, C2D_WithColor, 160.0f - (wO/2), curY + (65.0f * ease), 1.0f, tScale, tScale, txtColor);
+        GFX_DrawText(&qText, 160.0f - (wQ/2), curY + (25.0f * ease), 1.0f, tScale, tScale, GFX_ALIGN_LEFT, txtColor);
+        GFX_DrawText(&optText, 160.0f - (wO/2), curY + (65.0f * ease), 1.0f, tScale, tScale, GFX_ALIGN_LEFT, txtColor);
         
-        C2D_TextBufDelete(popupBuf);
+        GFX_TextBufDelete(popupBuf);
     }
 
 	if (flashActive) {
@@ -502,13 +504,13 @@ void sceneMainMenuRender(void) {
 
 		float fadeValue = 1.0f - fadeProgress; 
 		uint8_t alpha = (uint8_t)(fadeValue * 255.0f);
-        C2D_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, alpha));
+        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, alpha));
 	}
 }
 
 void sceneMainMenuExit(void) {
     if (MainMenu) {
-        C2D_TextBufDelete(MainMenu);
+        GFX_TextBufDelete(MainMenu);
         MainMenu = NULL;
     }
     

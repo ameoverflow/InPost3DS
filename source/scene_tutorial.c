@@ -12,7 +12,7 @@
 #include "text.h"
 #include "cwav_shit.h" 
 #include "scene_init.h"
-
+#include "drawing.h"
 static u64 lastTick = 0;
 static float dt = 0.0f;
 
@@ -39,8 +39,8 @@ typedef struct {
     int speakingImageId;   
     int idleImageId;       
     float speechDuration;  
-    C2D_Image* topImage;    
-    C2D_Image* bottomImage; 
+    GFX_IMAGE* topImage;    
+    GFX_IMAGE* bottomImage; 
 } TutorialStep;
 
 
@@ -48,63 +48,17 @@ static float speechTimer = 0.0f;
 static int currentDisplayedCharId = 0; 
 
 // leniwe w chuj ale mam 8 dni do releasu
-static const TutorialStep tutorialScript_arhn[] = {
-    { "Siemka! Witaj w Inpost 3DS.", 0, 0, 3.0f, NULL, NULL },
-    { "W tym krótkim samouczku pokazę ci\njak korzystać z aplikacji...", 1, 1, 3.5f, NULL, NULL },
-    { "zaczynając od menu głównego.", 1, 1, 2.0f, &tut0_0, &tut0_bot0 },
-    { "Na górnym ekranie możesz spostrzec znaczek\nz danymi twojej przesyłki.", 1, 1, 3.0f, &tut0_0, &tut0_bot0 },
-    { "Zawiera on rzeczy takie jak...", 1, 1, 2.0f, &tut0_0, &tut0_bot0 },
-    { "Data ostatnio aktualizowanego statusu\nprzesyłki", 1, 1, 3.0f, &tut0_1, &tut0_bot0 },
-    { "Nazwa paczkomatu bądź nadawcy", 1, 1, 2.5f, &tut0_2, &tut0_bot0 },
-    { "Oraz przybliżony adres docelowy przesyłki", 1, 1, 3.0f, &tut0_3, &tut0_bot0 },
-    { "Używając D-Pada możesz poruszać się pomiędzy\npaczkami pokazanymi na dolnym ekranie", 1, 1, 4.0f, &tut0_0, &tut0_bot1 },
-    { "Po wciśnięciu (A) na którąkolwiek paczkę.\nPrzeniesiesz sie do menu z jej detalami.", 1, 1, 4.0f, &tut1_0, &tut1_bot0},
-    { "Na górnym ekranie zobaczysz podgląd\nobecnego paczkomatu.", 1, 1, 3.0f, &tut1_0, &tut1_bot0},
-    { "A na dolnym ekranie, menu z detalami\nśledzenia oraz przyciskiem (QR)", 1, 1, 4.0f, &tut1_0, &tut1_bot1},
-    { "Po dotknięciu go przeniesiesz się do menu\nodbioru paczki.", 1, 1, 3.0f, NULL, &tut2_0},
-    { "Na dolnym ekranie będzie wyświetlał sie kod QR do\nodbioru przy użyciu skanerów dostępnych\nw paczkomatach", 1, 1, 5.0f, NULL, &tut2_0},
-    { "Które... nie lubią działać z \"ekranem konsolki\"", 2, 2, 3.0f, NULL, &tut2_0},
-    { "Jak i przycisk do otworzenia skrytki zdalnie!", 1, 1, 3.0f, NULL, &tut2_0},
-    { "Po dotknięciu go ukaże sie pop-up potwierdzający\nże na pewno chcesz otworzyć skrytke", 1, 1, 4.0f, NULL, &tut3_0},
-    { "Jest tylko dlatego, by przypadkiem nie otworzyć\npaczkomatu.", 1, 1, 3.5f, NULL, &tut3_0},
-    { "InPost3DS nie wykrywa lokalizacji więc\npolecam uważać.", 1, 1, 3.0f, NULL, &tut3_0},
-    { "To by było wszystko w samouczku.", 1, 1, 2.0f, NULL, NULL},
-    { "Dziękuje za skorzystanie z InPost3DS!\nMam nadzieje że będziesz sie bawić dobrze. :)", 0, 0, 4.0f, NULL, NULL}
-};
-
-
-static const TutorialStep tutorialScript[] = {
-    { "Siemka! Witaj w Inpost 3DS.", 0, 2, 3.0f, NULL, NULL },
-    { "W tym krótkim samouczku pokazę ci\njak korzystać z aplikacji...", 1, 2, 3.5f, NULL, NULL },
-    { "zaczynając od menu głównego.", 1, 2, 2.0f, &tut0_0, &tut0_bot0 },
-    { "Na górnym ekranie możesz spostrzec znaczek\nz danymi twojej przesyłki.", 1, 2, 3.0f, &tut0_0, &tut0_bot0 },
-    { "Zawiera on rzeczy takie jak...", 1, 2, 2.0f, &tut0_0, &tut0_bot0 },
-    { "Data ostatnio aktualizowanego statusu\nprzesyłki", 1, 2, 3.0f, &tut0_1, &tut0_bot0 },
-    { "Nazwa paczkomatu bądź nadawcy", 1, 2, 2.5f, &tut0_2, &tut0_bot0 },
-    { "Oraz przybliżony adres docelowy przesyłki", 1, 2, 3.0f, &tut0_3, &tut0_bot0 },
-    { "Używając D-Pada możesz poruszać się pomiędzy\npaczkami pokazanymi na dolnym ekranie", 1, 2, 4.0f, &tut0_0, &tut0_bot1 },
-    { "Po wciśnięciu (A) na którąkolwiek paczkę.\nPrzeniesiesz sie do menu z jej detalami.", 1, 2, 4.0f, &tut1_0, &tut1_bot0},
-    { "Na górnym ekranie zobaczysz podgląd\nobecnego paczkomatu.", 1, 2, 3.0f, &tut1_0, &tut1_bot0},
-    { "A na dolnym ekranie, menu z detalami\nśledzenia oraz przyciskiem (QR)", 1, 2, 4.0f, &tut1_0, &tut1_bot1},
-    { "Po dotknięciu go przeniesiesz się do menu\nodbioru paczki.", 1, 2, 3.0f, NULL, &tut2_0},
-    { "Na dolnym ekranie będzie wyświetlał sie kod QR do\nodbioru przy użyciu skanerów dostępnych\nw paczkomatach", 1, 2, 5.0f, NULL, &tut2_0},
-    { "Które... nie lubią działać z \"ekranem konsolki\"", 3, 4, 3.0f, NULL, &tut2_0},
-    { "Jak i przycisk do otworzenia skrytki zdalnie!", 0, 2, 3.0f, NULL, &tut2_0},
-    { "Po dotknięciu go ukaże sie pop-up potwierdzający\nże na pewno chcesz otworzyć skrytke", 1, 2, 4.0f, NULL, &tut3_0},
-    { "Jest tylko dlatego, by przypadkiem nie otworzyć\npaczkomatu.", 1, 2, 3.5f, NULL, &tut3_0},
-    { "InPost3DS nie wykrywa lokalizacji więc\npolecam uważać.", 1, 2, 3.0f, NULL, &tut3_0},
-    { "To by było wszystko w samouczku.", 1, 2, 2.0f, NULL, NULL},
-    { "Dziękuje za skorzystanie z InPost3DS!\nMam nadzieje że będziesz sie bawić dobrze. :)", 0, 2, 4.0f, NULL, NULL}
-};
+static TutorialStep tutorialScript_arhn[21];
+static TutorialStep tutorialScript[21];
 
 static int totalSteps = sizeof(tutorialScript) / sizeof(TutorialStep);
 static int currentStep = 0;
 
-static C2D_TextBuf tutorialTextBuf;
-static C2D_Text currentTextObj;
+static GFX_TEXTBUF tutorialTextBuf;
+static GFX_TEXT currentTextObj;
 
-static C2D_TextBuf promptBuf;
-static C2D_Text promptText;
+static GFX_TEXTBUF promptBuf;
+static GFX_TEXT promptText;
 
 
 static float flashTimer = 0.0f;
@@ -135,6 +89,49 @@ void sceneTutorialInit(void) {
         currentDisplayedCharId = tutorialScript_arhn[currentStep].speakingImageId;
     }
     
+    tutorialScript_arhn[0] = (TutorialStep){ "Siemka! Witaj w Inpost 3DS.", 0, 0, 3.0f, NULL, NULL };
+    tutorialScript_arhn[1] = (TutorialStep){ "W tym krótkim samouczku pokazę ci\njak korzystać z aplikacji...", 1, 1, 3.5f, NULL, NULL };
+    tutorialScript_arhn[2] = (TutorialStep){ "zaczynając od menu głównego.", 1, 1, 2.0f, tut0_0, tut0_bot0 };
+    tutorialScript_arhn[3] = (TutorialStep){ "Na górnym ekranie możesz spostrzec znaczek\nz danymi twojej przesyłki.", 1, 1, 3.0f, tut0_0, tut0_bot0 };
+    tutorialScript_arhn[4] = (TutorialStep){ "Zawiera on rzeczy takie jak...", 1, 1, 2.0f, tut0_0, tut0_bot0 };
+    tutorialScript_arhn[5] = (TutorialStep){ "Data ostatnio aktualizowanego statusu\nprzesyłki", 1, 1, 3.0f, tut0_1, tut0_bot0 };
+    tutorialScript_arhn[6] = (TutorialStep){ "Nazwa paczkomatu bądź nadawcy", 1, 1, 2.5f, tut0_2, tut0_bot0 };
+    tutorialScript_arhn[7] = (TutorialStep){ "Oraz przybliżony adres docelowy przesyłki", 1, 1, 3.0f, tut0_3, tut0_bot0 };
+    tutorialScript_arhn[8] = (TutorialStep){ "Używając D-Pada możesz poruszać się pomiędzy\npaczkami pokazanymi na dolnym ekranie", 1, 1, 4.0f, tut0_0, tut0_bot1 };
+    tutorialScript_arhn[9] = (TutorialStep){ "Po wciśnięciu (A) na którąkolwiek paczkę.\nPrzeniesiesz sie do menu z jej detalami.", 1, 1, 4.0f, tut1_0, tut1_bot0 };
+    tutorialScript_arhn[10] = (TutorialStep){ "Na górnym ekranie zobaczysz podgląd\nobecnego paczkomatu.", 1, 1, 3.0f, tut1_0, tut1_bot0 };
+    tutorialScript_arhn[11] = (TutorialStep){ "A na dolnym ekranie, menu z detalami\nśledzenia oraz przyciskiem (QR)", 1, 1, 4.0f, tut1_0, tut1_bot1 };
+    tutorialScript_arhn[12] = (TutorialStep){ "Po dotknięciu go przeniesiesz się do menu\nodbioru paczki.", 1, 1, 3.0f, NULL, tut2_0 };
+    tutorialScript_arhn[13] = (TutorialStep){ "Na dolnym ekranie będzie wyświetlał sie kod QR do\nodbioru przy użyciu skanerów dostępnych\nw paczkomatach", 1, 1, 5.0f, NULL, tut2_0 };
+    tutorialScript_arhn[14] = (TutorialStep){ "Które... nie lubią działać z \"ekranem konsolki\"", 2, 2, 3.0f, NULL, tut2_0 };
+    tutorialScript_arhn[15] = (TutorialStep){ "Jak i przycisk do otworzenia skrytki zdalnie!", 1, 1, 3.0f, NULL, tut2_0 };
+    tutorialScript_arhn[16] = (TutorialStep){ "Po dotknięciu go ukaże sie pop-up potwierdzający\nże na pewno chcesz otworzyć skrytke", 1, 1, 4.0f, NULL, tut3_0 };
+    tutorialScript_arhn[17] = (TutorialStep){ "Jest tylko dlatego, by przypadkiem nie otworzyć\npaczkomatu.", 1, 1, 3.5f, NULL, tut3_0 };
+    tutorialScript_arhn[18] = (TutorialStep){ "InPost3DS nie wykrywa lokalizacji więc\npolecam uważać.", 1, 1, 3.0f, NULL, tut3_0 };
+    tutorialScript_arhn[19] = (TutorialStep){ "To by było wszystko w samouczku.", 1, 1, 2.0f, NULL, NULL };
+    tutorialScript_arhn[20] = (TutorialStep){ "Dziękuje za skorzystanie z InPost3DS!\nMam nadzieje że będziesz sie bawić dobrze. :)", 0, 0, 4.0f, NULL, NULL };
+
+    tutorialScript[0] = (TutorialStep){ "Siemka! Witaj w Inpost 3DS.", 0, 2, 3.0f, NULL, NULL };
+    tutorialScript[1] = (TutorialStep){ "W tym krótkim samouczku pokazę ci\njak korzystać z aplikacji...", 1, 2, 3.5f, NULL, NULL };
+    tutorialScript[2] = (TutorialStep){ "zaczynając od menu głównego.", 1, 2, 2.0f, tut0_0, tut0_bot0 };
+    tutorialScript[3] = (TutorialStep){ "Na górnym ekranie możesz spostrzec znaczek\nz danymi twojej przesyłki.", 1, 2, 3.0f, tut0_0, tut0_bot0 };
+    tutorialScript[4] = (TutorialStep){ "Zawiera on rzeczy takie jak...", 1, 2, 2.0f, tut0_0, tut0_bot0 };
+    tutorialScript[5] = (TutorialStep){ "Data ostatnio aktualizowanego statusu\nprzesyłki", 1, 2, 3.0f, tut0_1, tut0_bot0 };
+    tutorialScript[6] = (TutorialStep){ "Nazwa paczkomatu bądź nadawcy", 1, 2, 2.5f, tut0_2, tut0_bot0 };
+    tutorialScript[7] = (TutorialStep){ "Oraz przybliżony adres docelowy przesyłki", 1, 2, 3.0f, tut0_3, tut0_bot0 };
+    tutorialScript[8] = (TutorialStep){ "Używając D-Pada możesz poruszać się pomiędzy\npaczkami pokazanymi na dolnym ekranie", 1, 2, 4.0f, tut0_0, tut0_bot1 };
+    tutorialScript[9] = (TutorialStep){ "Po wciśnięciu (A) na którąkolwiek paczkę.\nPrzeniesiesz sie do menu z jej detalami.", 1, 2, 4.0f, tut1_0, tut1_bot0 };
+    tutorialScript[10] = (TutorialStep){ "Na górnym ekranie zobaczysz podgląd\nobecnego paczkomatu.", 1, 2, 3.0f, tut1_0, tut1_bot0 };
+    tutorialScript[11] = (TutorialStep){ "A na dolnym ekranie, menu z detalami\nśledzenia oraz przyciskiem (QR)", 1, 2, 4.0f, tut1_0, tut1_bot1 };
+    tutorialScript[12] = (TutorialStep){ "Po dotknięciu go przeniesiesz się do menu\nodbioru paczki.", 1, 2, 3.0f, NULL, tut2_0 };
+    tutorialScript[13] = (TutorialStep){ "Na dolnym ekranie będzie wyświetlał sie kod QR do\nodbioru przy użyciu skanerów dostępnych\nw paczkomatach", 1, 2, 5.0f, NULL, tut2_0 };
+    tutorialScript[14] = (TutorialStep){ "Które... nie lubią działać z \"ekranem konsolki\"", 3, 4, 3.0f, NULL, tut2_0 };
+    tutorialScript[15] = (TutorialStep){ "Jak i przycisk do otworzenia skrytki zdalnie!", 0, 2, 3.0f, NULL, tut2_0 };
+    tutorialScript[16] = (TutorialStep){ "Po dotknięciu go ukaże sie pop-up potwierdzający\nże na pewno chcesz otworzyć skrytke", 1, 2, 4.0f, NULL, tut3_0 };
+    tutorialScript[17] = (TutorialStep){ "Jest tylko dlatego, by przypadkiem nie otworzyć\npaczkomatu.", 1, 2, 3.5f, NULL, tut3_0 };
+    tutorialScript[18] = (TutorialStep){ "InPost3DS nie wykrywa lokalizacji więc\npolecam uważać.", 1, 2, 3.0f, NULL, tut3_0 };
+    tutorialScript[19] = (TutorialStep){ "To by było wszystko w samouczku.", 1, 2, 2.0f, NULL, NULL };
+    tutorialScript[20] = (TutorialStep){ "Dziękuje za skorzystanie z InPost3DS!\nMam nadzieje że będziesz sie bawić dobrze. :)", 0, 2, 4.0f, NULL, NULL };
     
     flashTimer = 0.0f;
     
@@ -147,21 +144,21 @@ void sceneTutorialInit(void) {
     botImgTimer = 0.0f;
     tut_bg_x = 0.0f;
 
-    tutorialTextBuf = C2D_TextBufNew(4096);
-    C2D_TextBufClear(tutorialTextBuf);
+    tutorialTextBuf = GFX_TextBufNew(4096);
+    GFX_TextBufClear(tutorialTextBuf);
     if (VOICEACT != 3) {
-        C2D_TextParse(&currentTextObj, tutorialTextBuf, tutorialScript[currentStep].text);
-        C2D_TextOptimize(&currentTextObj);
+        GFX_TextParse(&currentTextObj, tutorialTextBuf, tutorialScript[currentStep].text);
+        GFX_TextOptimize(&currentTextObj);
     } else {
-         C2D_TextParse(&currentTextObj, tutorialTextBuf, tutorialScript_arhn[currentStep].text);
-        C2D_TextOptimize(&currentTextObj);
+         GFX_TextParse(&currentTextObj, tutorialTextBuf, tutorialScript_arhn[currentStep].text);
+        GFX_TextOptimize(&currentTextObj);
     }
     
 
 
-    promptBuf = C2D_TextBufNew(256);
-    C2D_TextParse(&promptText, promptBuf, "Naciśnij (A), aby kontynuować");
-    C2D_TextOptimize(&promptText);
+    promptBuf = GFX_TextBufNew(256);
+    GFX_TextParse(&promptText, promptBuf, "Naciśnij (A), aby kontynuować");
+    GFX_TextOptimize(&promptText);
 
     switch(VOICEACT) {
         case 1:
@@ -189,6 +186,7 @@ void sceneTutorialInit(void) {
 
             break;
     }    
+
 
    
 }
@@ -252,10 +250,10 @@ void sceneTutorialUpdate(uint32_t kDown, uint32_t kHeld) {
             if (nextStep >= totalSteps) {
                 sceneManagerSwitchTo(SCENE_HOME_MENU);
             } else {
-                C2D_Image* oldTop = tutorialScript[currentStep].topImage;
-                C2D_Image* newTop = tutorialScript[nextStep].topImage;
-                C2D_Image* oldBot = tutorialScript[currentStep].bottomImage;
-                C2D_Image* newBot = tutorialScript[nextStep].bottomImage;
+                GFX_IMAGE* oldTop = tutorialScript[currentStep].topImage;
+                GFX_IMAGE* newTop = tutorialScript[nextStep].topImage;
+                GFX_IMAGE* oldBot = tutorialScript[currentStep].bottomImage;
+                GFX_IMAGE* newBot = tutorialScript[nextStep].bottomImage;
 
                 if (newTop != oldTop && newTop != NULL) topImgTimer = 0.0f;
                 if (newBot != oldBot && newBot != NULL) botImgTimer = 0.0f;
@@ -283,13 +281,13 @@ void sceneTutorialUpdate(uint32_t kDown, uint32_t kHeld) {
                         break;
                 }
 
-                C2D_TextBufClear(tutorialTextBuf);
+                GFX_TextBufClear(tutorialTextBuf);
                 if (VOICEACT != 3) {
-                    C2D_TextParse(&currentTextObj, tutorialTextBuf, tutorialScript[currentStep].text);
+                    GFX_TextParse(&currentTextObj, tutorialTextBuf, tutorialScript[currentStep].text);
                 } else {
-                    C2D_TextParse(&currentTextObj, tutorialTextBuf, tutorialScript_arhn[currentStep].text);
+                    GFX_TextParse(&currentTextObj, tutorialTextBuf, tutorialScript_arhn[currentStep].text);
                 }
-                C2D_TextOptimize(&currentTextObj);
+                GFX_TextOptimize(&currentTextObj);
                 
                 isBouncing = true;
                 charBounceTimer = 0.0f;
@@ -303,8 +301,8 @@ void sceneTutorialUpdate(uint32_t kDown, uint32_t kHeld) {
 }
 
 void drawTutorialTop(float offset) {
-    C2D_DrawImageAt(bg_top, tut_bg_x - 560 + offset, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
-    C2D_DrawImageAt(bg_top, tut_bg_x + offset, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
+    GFX_DrawImageAt(bg_top, tut_bg_x - 560 + offset, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
+    GFX_DrawImageAt(bg_top, tut_bg_x + offset, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
 
     float entranceT = entranceTimer / ENTRANCE_DURATION;
     if (entranceT > 1.0f) entranceT = 1.0f;
@@ -318,7 +316,7 @@ void drawTutorialTop(float offset) {
     float charEase = easeOutCubicTut(charT);
     if (VOICEACT != 3) {
         if (tutorialScript[currentStep].topImage != NULL) {
-            C2D_Image* img = tutorialScript[currentStep].topImage;
+            GFX_IMAGE* img = tutorialScript[currentStep].topImage;
             
             float animT = topImgTimer / IMG_ANIM_DURATION;
             if (animT > 1.0f) animT = 1.0f;
@@ -326,17 +324,17 @@ void drawTutorialTop(float offset) {
             
             if (popScale < 0.0f) popScale = 0.0f;
 
-            float drawW = img->subtex->width * popScale;
-            float drawH = img->subtex->height * popScale;
+            float drawW = img->width * popScale;
+            float drawH = img->height * popScale;
 
             float x = 200.0f - (drawW / 2.0f);
             float y = 120.0f - (drawH / 2.0f);
             
-            C2D_DrawImageAt(*img, x + offset, y, 0.5f, NULL, popScale, popScale);
+            GFX_DrawImageAt(img, x + offset, y, 0.5f, NULL, popScale, popScale);
         }
     } else {
         if (tutorialScript_arhn[currentStep].topImage != NULL) {
-            C2D_Image* img = tutorialScript_arhn[currentStep].topImage;
+            GFX_IMAGE* img = tutorialScript_arhn[currentStep].topImage;
             
             float animT = topImgTimer / IMG_ANIM_DURATION;
             if (animT > 1.0f) animT = 1.0f;
@@ -344,13 +342,13 @@ void drawTutorialTop(float offset) {
             
             if (popScale < 0.0f) popScale = 0.0f;
 
-            float drawW = img->subtex->width * popScale;
-            float drawH = img->subtex->height * popScale;
+            float drawW = img->width * popScale;
+            float drawH = img->height * popScale;
 
             float x = 200.0f - (drawW / 2.0f);
             float y = 120.0f - (drawH / 2.0f);
             
-            C2D_DrawImageAt(*img, x + offset, y, 0.5f, NULL, popScale, popScale);
+            GFX_DrawImageAt(img, x + offset, y, 0.5f, NULL, popScale, popScale);
         } 
     }
 
@@ -378,13 +376,13 @@ void drawTutorialTop(float offset) {
     float uiOffset = offset * 0.5f; 
     
     C2D_DrawRectangle(-20 + uiOffset, currentBoxY, 0.8f, 450.0f, boxH, colorTop, colorTop, colorBot, colorBot);
-    C2D_DrawRectSolid(-20 + uiOffset, currentBoxY, 0.85f, 450.0f, 2.0f, C2D_Color32(255, 204, 0, 255));
+    GFX_DrawRectSolid(-20 + uiOffset, currentBoxY, 0.85f, 450.0f, 2.0f, C2D_Color32(255, 204, 0, 255));
 
     float textX = 160.0f; 
     float textY = currentBoxY + 15.0f;
     
     if (currentBoxY < 240.0f) {
-        C2D_DrawText(&currentTextObj, C2D_WithColor, textX + uiOffset, textY, 0.9f, 0.4f, 0.4f, C2D_Color32(255, 255, 255, 255));
+        GFX_DrawText(&currentTextObj, textX + uiOffset, textY, 0.9f, 0.4f, 0.4f, GFX_ALIGN_LEFT, C2D_Color32(255, 255, 255, 255));
     }
 
     if (charBaseX + charW > -200.0f) {
@@ -393,19 +391,19 @@ void drawTutorialTop(float offset) {
             case 1:        
                 switch(currentDisplayedCharId) {
                     case 0:
-                        C2D_DrawImageAt(kun_excited, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(kun_excited, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break;
                     case 1:
-                        C2D_DrawImageAt(kun_idle_speak, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(kun_idle_speak, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break; 
                     case 2:
-                        C2D_DrawImageAt(kun_idle, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(kun_idle, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break;
                     case 3:
-                        C2D_DrawImageAt(kun_diss_speak, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(kun_diss_speak, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break; 
                     case 4:
-                        C2D_DrawImageAt(kun_diss, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(kun_diss, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break;
                 }
                 break;
@@ -413,19 +411,19 @@ void drawTutorialTop(float offset) {
                 
                 switch(currentDisplayedCharId) {
                     case 0:
-                        C2D_DrawImageAt(chan_excited, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(chan_excited, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break;
                     case 1:
-                        C2D_DrawImageAt(chan_idle_speak, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(chan_idle_speak, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break; 
                     case 2:
-                        C2D_DrawImageAt(chan_idle, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(chan_idle, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break;
                     case 3:
-                        C2D_DrawImageAt(chan_diss_speak, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(chan_diss_speak, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break; 
                     case 4:
-                        C2D_DrawImageAt(chan_diss, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(chan_diss, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break;
                 }
                 break;
@@ -433,32 +431,32 @@ void drawTutorialTop(float offset) {
                 
                 switch(currentDisplayedCharId) {
                     case 0:
-                        C2D_DrawImageAt(arhn_siema, x, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(arhn_siema, x, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break;
                     case 1:
-                        C2D_DrawImageAt(arhn_explain, x, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(arhn_explain, x, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break; 
                     case 2:
-                        C2D_DrawImageAt(arhn_diss, x, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(arhn_diss, x, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break;
                 }
                 break;
             default:
                 switch(currentDisplayedCharId) {
                     case 0:
-                        C2D_DrawImageAt(chan_excited, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(chan_excited, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break;
                     case 1:
-                        C2D_DrawImageAt(chan_idle_speak, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(chan_idle_speak, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break; 
                     case 2:
-                        C2D_DrawImageAt(chan_idle, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(chan_idle, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break;
                     case 3:
-                        C2D_DrawImageAt(chan_diss_speak, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(chan_diss_speak, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break; 
                     case 4:
-                        C2D_DrawImageAt(chan_diss, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
+                        GFX_DrawImageAt(chan_diss, x - 15.0f, finalCharY - 30.0f, 1.0f, NULL, 1.0f, 1.0f);
                         break;
                 }
         }
@@ -466,7 +464,7 @@ void drawTutorialTop(float offset) {
     if (flashTimer < FLASH_DURATION) {
         float alpha = 1.0f - (flashTimer / FLASH_DURATION);
         u32 white = C2D_Color32(255, 255, 255, (u8)(255 * alpha));
-        C2D_DrawRectSolid(0, 0, 1.0f, 400, 240, white);
+        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, white);
     }
 }
 
@@ -484,10 +482,10 @@ void sceneTutorialRender(void) {
     C2D_SceneBegin(bottom);
     C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255));
 
-    C2D_DrawImageAt(bg_bottom, tut_bg_x, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
+    GFX_DrawImageAt(bg_bottom, tut_bg_x, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
     if (VOICEACT != 3) {
         if (tutorialScript[currentStep].bottomImage != NULL) {
-            C2D_Image* img = tutorialScript[currentStep].bottomImage;
+            GFX_IMAGE* img = tutorialScript[currentStep].bottomImage;
 
             float animT = botImgTimer / IMG_ANIM_DURATION;
             if (animT > 1.0f) animT = 1.0f;
@@ -495,17 +493,17 @@ void sceneTutorialRender(void) {
 
             if (popScale < 0.0f) popScale = 0.0f;
 
-            float drawW = img->subtex->width * popScale;
-            float drawH = img->subtex->height * popScale;
+            float drawW = img->width * popScale;
+            float drawH = img->height * popScale;
 
             float x = 160.0f - (drawW / 2.0f);
             float y = 120.0f - (drawH / 2.0f);
 
-            C2D_DrawImageAt(*img, x, y, 0.5f, NULL, popScale, popScale);
+            GFX_DrawImageAt(img, x, y, 0.5f, NULL, popScale, popScale);
         }
     } else {
         if (tutorialScript_arhn[currentStep].bottomImage != NULL) {
-            C2D_Image* img = tutorialScript_arhn[currentStep].bottomImage;
+            GFX_IMAGE* img = tutorialScript_arhn[currentStep].bottomImage;
 
             float animT = botImgTimer / IMG_ANIM_DURATION;
             if (animT > 1.0f) animT = 1.0f;
@@ -513,32 +511,32 @@ void sceneTutorialRender(void) {
 
             if (popScale < 0.0f) popScale = 0.0f;
 
-            float drawW = img->subtex->width * popScale;
-            float drawH = img->subtex->height * popScale;
+            float drawW = img->width * popScale;
+            float drawH = img->height * popScale;
 
             float x = 160.0f - (drawW / 2.0f);
             float y = 120.0f - (drawH / 2.0f);
 
-            C2D_DrawImageAt(*img, x, y, 0.5f, NULL, popScale, popScale);
+            GFX_DrawImageAt(img, x, y, 0.5f, NULL, popScale, popScale);
         }
     }
 
     float w, h;
-    C2D_TextGetDimensions(&promptText, 0.6f, 0.6f, &w, &h);
+    GFX_TextGetDimensions(&promptText, 0.6f, 0.6f, &w, &h);
     
     u8 pulse = (u8)(155 + 100 * fabs(sinf(osGetTime() / 500.0f)));
-    C2D_DrawText(&promptText, C2D_WithColor, 160.0f - (w/2), 200.0f, 0.5f, 0.6f, 0.6f, C2D_Color32(0, 0, 0, pulse));
+    GFX_DrawText(&promptText, 160.0f - (w/2), 200.0f, 0.5f, 0.6f, 0.6f, GFX_ALIGN_LEFT, C2D_Color32(0, 0, 0, pulse));
     
     if (flashTimer < FLASH_DURATION) {
         float alpha = 1.0f - (flashTimer / FLASH_DURATION);
         u32 white = C2D_Color32(255, 255, 255, (u8)(255 * alpha));
-        C2D_DrawRectSolid(0, 0, 1.0f, 320, 240, white);
+        GFX_DrawRectSolid(0, 0, 1.0f, 320, 240, white);
     }
 }
 
 void sceneTutorialExit(void) {
-    C2D_TextBufDelete(tutorialTextBuf);
-    C2D_TextBufDelete(promptBuf);
+    GFX_TextBufDelete(tutorialTextBuf);
+    GFX_TextBufDelete(promptBuf);
     
     // switch(VOICEACT) {
     //     case 1:

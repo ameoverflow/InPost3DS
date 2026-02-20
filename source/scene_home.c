@@ -16,6 +16,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "scene_mainmenu.h"
+#include "drawing.h"
 
 extern int paczka_count;
 extern Paczka paczka_list[];
@@ -60,10 +61,10 @@ float pkgAnimTimer = 0.0f;
 int selectedPaczkaIndex = 0;
 
 
-C2D_TextBuf detailsTextBuf; 
-C2D_TextBuf eventListBuf;   
+GFX_TEXTBUF detailsTextBuf; 
+GFX_TEXTBUF eventListBuf;   
 
-C2D_Text text_name, text_addr, text_status, date_addr, text_event_line; 
+GFX_TEXT text_name, text_addr, text_status, date_addr, text_event_line; 
 
 int pressedBtnId = 0; 
 
@@ -136,16 +137,16 @@ void swizzleTexture(uint8_t* dst, const uint8_t* src, int width, int height) {
         }
     }
 }
-void drawNoPaczkasOverlay(C2D_Text* textObj, float x, float y) {
+void drawNoPaczkasOverlay(GFX_TEXT* textObj, float x, float y) {
 
     if (paczka_count == 0) {
-        drawShadowedText(
+        GFX_DrawShadowedText(
             textObj,
             x,
             y,
             0.6f,
             0.7f,
-            0.7f,
+            0.7f, GFX_ALIGN_CENTER,
             C2D_Color32(0xB1, 0xA2, 0x2F, 0xff),
             C2D_Color32(0xff, 0xff, 0xff, 0xff)
         );
@@ -239,7 +240,7 @@ void onPaczkaCollected(void) {
 void updatePaczkaText(void) {
     if (paczka_count <= 0 || selectedPaczkaIndex < 0 || selectedPaczkaIndex >= paczka_count) return;
 
-    C2D_TextBufClear(detailsTextBuf);
+    GFX_TextBufClear(detailsTextBuf);
     Paczka *sel = &paczka_list[selectedPaczkaIndex];
     char addressBuffer[150];
     if (sel->courier_paczka) {
@@ -248,25 +249,25 @@ void updatePaczkaText(void) {
         snprintf(addressBuffer, sizeof(addressBuffer), "%s, %s", sel->street, sel->city);
     }
 
-    C2D_TextParse(&text_status, detailsTextBuf, sel->status);
-    C2D_TextParse(&text_name, detailsTextBuf, sel->pickupPointName);
-    C2D_TextParse(&text_addr, detailsTextBuf, addressBuffer);
+    GFX_TextParse(&text_status, detailsTextBuf, sel->status);
+    GFX_TextParse(&text_name, detailsTextBuf, sel->pickupPointName);
+    GFX_TextParse(&text_addr, detailsTextBuf, addressBuffer);
     char storedPretty[32];
     const char* storedToShow = sel->storedDate;
     if (formatIsoDateTime(sel->storedDate, storedPretty, sizeof(storedPretty))) {
         storedToShow = storedPretty;
     }
-    C2D_TextParse(&date_addr, detailsTextBuf, storedToShow);
+    GFX_TextParse(&date_addr, detailsTextBuf, storedToShow);
 
-    C2D_TextOptimize(&text_status);
-    C2D_TextOptimize(&text_name);
-    C2D_TextOptimize(&text_addr);
-    C2D_TextOptimize(&date_addr);
+    GFX_TextOptimize(&text_status);
+    GFX_TextOptimize(&text_name);
+    GFX_TextOptimize(&text_addr);
+    GFX_TextOptimize(&date_addr);
 
     cachedTextPaczkaIndex = selectedPaczkaIndex;
 }
 int va_offset2 = 0;
-C2D_Text no_parcels_text;
+GFX_TEXT no_parcels_text;
 void sceneHomeMenuInit(void) {
     lastTick = svcGetSystemTick();
     dt = 0.0f;
@@ -309,12 +310,12 @@ void sceneHomeMenuInit(void) {
     inSettingsMode = false;
 
 
-    detailsTextBuf = C2D_TextBufNew(4096);
-    eventListBuf = C2D_TextBufNew(4096);
+    detailsTextBuf = GFX_TextBufNew(4096);
+    eventListBuf = GFX_TextBufNew(4096);
 
 
-    C2D_TextParse(&no_parcels_text, detailsTextBuf, "Brak Paczek :(");
-    C2D_TextOptimize(&no_parcels_text);
+    GFX_TextParse(&no_parcels_text, detailsTextBuf, "Brak Paczek :(");
+    GFX_TextOptimize(&no_parcels_text);
 
     if (!qrTexInitialized) {
         C3D_TexInit(&qrCodeTex, 128, 128, GPU_RGBA8);
@@ -736,15 +737,15 @@ void drawSpinner(float cx, float cy, float alphaVal) {
 
 void drawHomeSceneContent(float offset, float transT, float finalZY) {
 
-    C2D_DrawImageAt(bg_top, bg_x2 - 560 + offset, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
-    C2D_DrawImageAt(bg_top, bg_x2 + offset, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
+    GFX_DrawImageAt(bg_top, bg_x2 - 560 + offset, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
+    GFX_DrawImageAt(bg_top, bg_x2 + offset, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
 
 
     if (paczkasparsed) {
         if (finalZY > -230.0f) {
-            C2D_DrawImageAt(znaczek, 4.0f, finalZY + 4.0f, 0.5f, &shadowTint, 1.0f, 1.0f);
+            GFX_DrawImageAt(znaczek, 4.0f, finalZY + 4.0f, 0.5f, &shadowTint, 1.0f, 1.0f);
         }
-        C2D_DrawImageAt(znaczek, 0.0f, finalZY, 0.5f, NULL, 1.0f, 1.0f);
+        GFX_DrawImageAt(znaczek, 0.0f, finalZY, 0.5f, NULL, 1.0f, 1.0f);
 
         if (paczka_count > 0 && finalZY > -230.0f) {
             float centerScreenX = 200.0f;
@@ -758,20 +759,20 @@ void drawHomeSceneContent(float offset, float transT, float finalZY) {
                 u32 textColor = C2D_Color32(0, 0, 0, textAlpha);
 
                 float wD, hD;
-                C2D_TextGetDimensions(&text_status, scaleStatus, scaleStatus, &wD, &hD);
-                C2D_DrawText(&text_status, C2D_WithColor, centerScreenX - (wD / 2.0f), stampVisualCenterY - 35.0f, 0.6f, scaleStatus, scaleStatus, textColor);
+                GFX_TextGetDimensions(&text_status, scaleStatus, scaleStatus, &wD, &hD);
+                GFX_DrawText(&text_status, centerScreenX - (wD / 2.0f), stampVisualCenterY - 35.0f, 0.6f, scaleStatus, scaleStatus, GFX_ALIGN_LEFT, textColor);
 
                 float wS, hS;
-                C2D_TextGetDimensions(&date_addr, scaleStatus, scaleStatus, &wS, &hS);
-                C2D_DrawText(&date_addr, C2D_WithColor, centerScreenX - (wS / 2.0f), stampVisualCenterY - 65.0f, 0.6f, scaleStatus, scaleStatus, textColor);
+                GFX_TextGetDimensions(&date_addr, scaleStatus, scaleStatus, &wS, &hS);
+                GFX_DrawText(&date_addr, centerScreenX - (wS / 2.0f), stampVisualCenterY - 65.0f, 0.6f, scaleStatus, scaleStatus, GFX_ALIGN_LEFT, textColor);
 
                 float wN, hN;
-                C2D_TextGetDimensions(&text_name, scaleName, scaleName, &wN, &hN);
-                C2D_DrawText(&text_name, C2D_WithColor, centerScreenX - (wN / 2.0f), stampVisualCenterY - 5.0f, 0.6f, scaleName, scaleName, textColor);
+                GFX_TextGetDimensions(&text_name, scaleName, scaleName, &wN, &hN);
+                GFX_DrawText(&text_name, centerScreenX - (wN / 2.0f), stampVisualCenterY - 5.0f, 0.6f, scaleName, scaleName, GFX_ALIGN_LEFT, textColor);
 
                 float wA, hA;
-                C2D_TextGetDimensions(&text_addr, scaleAddr, scaleAddr, &wA, &hA);
-                C2D_DrawText(&text_addr, C2D_WithColor, centerScreenX - (wA / 2.0f), stampVisualCenterY + 25.0f, 0.6f, scaleAddr, scaleAddr, textColor);
+                GFX_TextGetDimensions(&text_addr, scaleAddr, scaleAddr, &wA, &hA);
+                GFX_DrawText(&text_addr, centerScreenX - (wA / 2.0f), stampVisualCenterY + 25.0f, 0.6f, scaleAddr, scaleAddr, GFX_ALIGN_LEFT, textColor);
             }
         } else {
 
@@ -815,17 +816,17 @@ void drawHomeSceneContent(float offset, float transT, float finalZY) {
                 C2D_DrawImageAt(kuponkurwa, drawX + 3.0f + offset, drawY + 3.0f, 0.7f, &shadowT, finalScale, finalScale);
                 C2D_DrawImageAt(kuponkurwa, drawX + offset, drawY, 0.71f, &imgT, finalScale, finalScale);
             } else {
-                C2D_Text historyTxt;
-                C2D_TextBufClear(eventListBuf);
-                C2D_TextParse(&historyTxt, eventListBuf, "Historia Zdarzeń");
-                C2D_TextOptimize(&historyTxt);
-                drawShadowedText(
+                GFX_TEXT historyTxt;
+                GFX_TextBufClear(eventListBuf);
+                GFX_TextParse(&historyTxt, eventListBuf, "Historia Zdarzeń");
+                GFX_TextOptimize(&historyTxt);
+                GFX_DrawShadowedText(
                     &historyTxt,
                     historyX + offset,
                     baseY,
                     0.7f,
                     1.0f,
-                    1.0f,
+                    1.0f, GFX_ALIGN_CENTER,
                     C2D_Color32(255,255,255,(u8)(255 * historyAlphaVal)),
                     C2D_Color32(0,0,0,(u8)(120 * historyAlphaVal))
                 );
@@ -839,7 +840,7 @@ void drawHomeSceneContent(float offset, float transT, float finalZY) {
         if (pT > 1.0f) pT = 1.0f;
         float alphaFactor = pT;
         u8 dimAlpha = (u8)(150.0f * alphaFactor);
-        C2D_DrawRectSolid(0, 0, 0.96f, 400, 240, C2D_Color32(0, 0, 0, dimAlpha));
+        GFX_DrawRectSolid(0, 0, 0.96f, 400, 240, C2D_Color32(0, 0, 0, dimAlpha));
     }
 
 
@@ -848,7 +849,7 @@ void drawHomeSceneContent(float offset, float transT, float finalZY) {
         if (fadeProgress > 1.0f) fadeProgress = 1.0f;
         float fadeValue = 1.0f - fadeProgress;
         uint8_t alpha = (uint8_t)(fadeValue * 255.0f);
-        C2D_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, alpha));
+        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, alpha));
     }
 }
 void drawFancyButton(float x, float y, float w, float h, const char* text, bool isPressed, float alpha) {
@@ -870,29 +871,29 @@ void drawFancyButton(float x, float y, float w, float h, const char* text, bool 
 
 
     if (!isPressed) {
-        C2D_DrawRectSolid(finalX + 2.0f, finalY + 2.0f, 0.9f, scaledW, scaledH, C2D_Color32(0, 0, 0, shadowA));
+        GFX_DrawRectSolid(finalX + 2.0f, finalY + 2.0f, 0.9f, scaledW, scaledH, C2D_Color32(0, 0, 0, shadowA));
     }
 
 
     u32 borderColor = C2D_Color32(255, 204, 0, a);
-    C2D_DrawRectSolid(finalX - 1.0f, finalY - 1.0f, 0.9f, scaledW + 2.0f, scaledH + 2.0f, borderColor);
+    GFX_DrawRectSolid(finalX - 1.0f, finalY - 1.0f, 0.9f, scaledW + 2.0f, scaledH + 2.0f, borderColor);
 
 
     u32 bgColor = isPressed ? C2D_Color32(234, 234, 234, a) : C2D_Color32(254, 254, 254, a);
-    C2D_DrawRectSolid(finalX, finalY, 0.9f, scaledW, scaledH, bgColor);
+    GFX_DrawRectSolid(finalX, finalY, 0.9f, scaledW, scaledH, bgColor);
 
 
-    C2D_TextBufClear(eventListBuf);
-    C2D_Text btnTxt;
-    C2D_TextParse(&btnTxt, eventListBuf, text);
-    C2D_TextOptimize(&btnTxt);
+    GFX_TextBufClear(eventListBuf);
+    GFX_TEXT btnTxt;
+    GFX_TextParse(&btnTxt, eventListBuf, text);
+    GFX_TextOptimize(&btnTxt);
 
 
     float txtW, txtH;
-    C2D_TextGetDimensions(&btnTxt, 0.5f, 0.5f, &txtW, &txtH);
+    GFX_TextGetDimensions(&btnTxt, 0.5f, 0.5f, &txtW, &txtH);
     u32 txtColor = C2D_Color32(205, 154, 0, a);
 
-    C2D_DrawText(&btnTxt, C2D_WithColor, centerX - (txtW / 2.0f), centerY - (txtH / 2.0f), 0.95f, 0.5f, 0.5f, txtColor);
+    GFX_DrawText(&btnTxt, centerX - (txtW / 2.0f), centerY - (txtH / 2.0f), 0.95f, 0.5f, 0.5f, GFX_ALIGN_LEFT, txtColor);
 }
 void sceneHomeMenuRender(void) {
 
@@ -938,7 +939,7 @@ void sceneHomeMenuRender(void) {
 
     C2D_SceneBegin(bottom);
     C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255));
-    C2D_DrawImageAt(bg_bottom, bg_x2, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
+    GFX_DrawImageAt(bg_bottom, bg_x2, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
 
     if (!paczkas.done) {
         drawSpinner(160.0f, 120.0f, 1.0f);
@@ -1006,10 +1007,10 @@ void sceneHomeMenuRender(void) {
                     C2D_ImageTint shdwTint;
                     C2D_PlainImageTint(&shdwTint, C2D_Color32(0, 0, 0, (u8)(alpha * 80.0f)), 1.0f);
 
-                    C2D_DrawImageAt(paczka_closed, drawX + 5.0f, currentY + 5.0f, 0.5f, &shdwTint, 1.0f, 1.0f);
-                    C2D_DrawImageAt(paczka_closed, drawX, currentY, 0.5f, &pkgTint, 1.0f, 1.0f);
+                    GFX_DrawImageAt(paczka_closed, drawX + 5.0f, currentY + 5.0f, 0.5f, &shdwTint, 1.0f, 1.0f);
+                    GFX_DrawImageAt(paczka_closed, drawX, currentY, 0.5f, &pkgTint, 1.0f, 1.0f);
                     if (i == selectedPaczkaIndex && !inDetailsMode) {
-                        C2D_DrawImageAt(paczka_sel, drawX - 17.0f, currentY - 17.0f, 0.4f, &pkgTint, 1.0f, 1.0f);
+                        GFX_DrawImageAt(paczka_sel, drawX - 17.0f, currentY - 17.0f, 0.4f, &pkgTint, 1.0f, 1.0f);
                     }
                 }
             }
@@ -1036,8 +1037,8 @@ void sceneHomeMenuRender(void) {
             float cardX = 160.0f - (cardSize / 2.0f);
 
             if (!p->courier_paczka && osGetWifiStrength() > 0) {
-                C2D_DrawRectSolid(cardX + 5.0f, currentQrY - 17.50f, 0.8f, cardSize, cardSize, qrTintVal2);
-                C2D_DrawRectSolid(cardX, currentQrY - 25.0f, 0.8f, cardSize, cardSize, qrTintVal);
+                GFX_DrawRectSolid(cardX + 5.0f, currentQrY - 17.50f, 0.8f, cardSize, cardSize, qrTintVal2);
+                GFX_DrawRectSolid(cardX, currentQrY - 25.0f, 0.8f, cardSize, cardSize, qrTintVal);
 
                 if (qrTexInitialized) {
                     float qrX = 160.0f - (128.0f / 2.0f);
@@ -1048,18 +1049,18 @@ void sceneHomeMenuRender(void) {
                 float btnStartY = 280.0f;
                 float currentBtnY = btnStartY - ((btnStartY - btnTargetY) * detailsEnterEase);
 
-                float imgW = otworz_zdalnie_button.subtex->width;
-                float imgH = otworz_zdalnie_button.subtex->height;
+                float imgW = otworz_zdalnie_button->width;
+                float imgH = otworz_zdalnie_button->height;
                 float drawX = 160.0f - (imgW / 2.0f);
                 float drawY = currentBtnY - (imgH / 2.0f);
 
                 u8 shadowAlpha = (u8)(100.0f * detailsEnterEase);
                 C2D_ImageTint shadowTint;
                 C2D_PlainImageTint(&shadowTint, C2D_Color32(0, 0, 0, shadowAlpha), 1.0f);
-                C2D_DrawImageAt(otworz_zdalnie_button, drawX + 4.0f, drawY + 4.0f, 0.89f, &shadowTint, 1.0f, 1.0f);
+                GFX_DrawImageAt(otworz_zdalnie_button, drawX + 4.0f, drawY + 4.0f, 0.89f, &shadowTint, 1.0f, 1.0f);
                 C2D_ImageTint btnTint;
                 C2D_AlphaImageTint(&btnTint, detailsEnterEase);
-                C2D_DrawImageAt(otworz_zdalnie_button, drawX, drawY, 0.9f, &btnTint, 1.0f, 1.0f);
+                GFX_DrawImageAt(otworz_zdalnie_button, drawX, drawY, 0.9f, &btnTint, 1.0f, 1.0f);
             }
 
         } else {
@@ -1072,7 +1073,7 @@ void sceneHomeMenuRender(void) {
             u32 dateColor = C2D_Color32(100, 100, 100, listAlpha);
             u32 nameColor = C2D_Color32(0, 0, 0, listAlpha);
 
-            C2D_TextBufClear(eventListBuf);
+            GFX_TextBufClear(eventListBuf);
 
             float listStartOffset = 10.0f;
 
@@ -1083,17 +1084,17 @@ void sceneHomeMenuRender(void) {
                     fade = fmaxf(0.0f, 1.0f - (detailsYOffset - scrollBaseY) / 40.0f);
                 }
                 u8 codeAlpha = (u8)(listAlpha * fade);
-                C2D_DrawRectSolid(0.0f, scrollBaseY, 0.61f, 320.0f, 50.0f, C2D_Color32(255, 255, 255, (u8)(180 * fade)));
+                GFX_DrawRectSolid(0.0f, scrollBaseY, 0.61f, 320.0f, 50.0f, C2D_Color32(255, 255, 255, (u8)(180 * fade)));
 
-                C2D_Text labelTxt, codeTxt;
-                C2D_TextParse(&labelTxt, eventListBuf, "Kod Odbioru:");
-                C2D_TextOptimize(&labelTxt);
-                C2D_DrawText(&labelTxt, C2D_WithColor, 15.0f, scrollBaseY + 12.0f, 0.7f, 0.5f, 0.5f, C2D_Color32(100, 100, 100, codeAlpha));
+                GFX_TEXT labelTxt, codeTxt;
+                GFX_TextParse(&labelTxt, eventListBuf, "Kod Odbioru:");
+                GFX_TextOptimize(&labelTxt);
+                GFX_DrawText(&labelTxt, 15.0f, scrollBaseY + 12.0f, 0.7f, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(100, 100, 100, codeAlpha));
 
-                C2D_TextParse(&codeTxt, eventListBuf, p->opencode);
-                C2D_TextOptimize(&codeTxt);
-                C2D_DrawText(&codeTxt, C2D_WithColor, 15.0f, scrollBaseY + 30.0f, 0.7f, 0.7f, 0.7f, C2D_Color32(0, 0, 0, codeAlpha));
-                C2D_DrawRectSolid(10.0f, scrollBaseY + 55.0f, 0.7f, 300.0f, 2.0f, C2D_Color32(255, 204, 0, codeAlpha));
+                GFX_TextParse(&codeTxt, eventListBuf, p->opencode);
+                GFX_TextOptimize(&codeTxt);
+                GFX_DrawText(&codeTxt, 15.0f, scrollBaseY + 30.0f, 0.7f, 0.7f, 0.7f, GFX_ALIGN_LEFT, C2D_Color32(0, 0, 0, codeAlpha));
+                GFX_DrawRectSolid(10.0f, scrollBaseY + 55.0f, 0.7f, 300.0f, 2.0f, C2D_Color32(255, 204, 0, codeAlpha));
             }
 
             float listY = scrollBaseY + listStartOffset;
@@ -1102,34 +1103,34 @@ void sceneHomeMenuRender(void) {
                 float itemY = listY + (i * 45.0f);
                 if (itemY < detailsYOffset - 40.0f || itemY > 250.0f) continue;
 
-                C2D_TextBufClear(eventListBuf);
+                GFX_TextBufClear(eventListBuf);
 
-                C2D_Text dateTxt, nameTxt;
+                GFX_TEXT dateTxt, nameTxt;
 
                 char eventPretty[32];
                 const char* eventToShow = p->events[i].date;
                 if (formatIsoDateTime(p->events[i].date, eventPretty, sizeof(eventPretty))) {
                     eventToShow = eventPretty;
                 }
-                C2D_TextParse(&dateTxt, eventListBuf, eventToShow);
-                C2D_TextOptimize(&dateTxt);
-                C2D_DrawText(&dateTxt, C2D_WithColor, 10.0f, itemY, 0.7f, 0.45f, 0.45f, dateColor);
+                GFX_TextParse(&dateTxt, eventListBuf, eventToShow);
+                GFX_TextOptimize(&dateTxt);
+                GFX_DrawText(&dateTxt, 10.0f, itemY, 0.7f, 0.45f, 0.45f, GFX_ALIGN_LEFT, dateColor);
 
-                C2D_TextParse(&nameTxt, eventListBuf, p->events[i].name);
-                C2D_TextOptimize(&nameTxt);
-                C2D_DrawText(&nameTxt, C2D_WithColor, 10.0f, itemY + 15.0f, 0.7f, 0.5f, 0.5f, nameColor);
+                GFX_TextParse(&nameTxt, eventListBuf, p->events[i].name);
+                GFX_TextOptimize(&nameTxt);
+                GFX_DrawText(&nameTxt, 10.0f, itemY + 15.0f, 0.7f, 0.5f, 0.5f, GFX_ALIGN_LEFT, nameColor);
 
-                C2D_DrawRectSolid(10.0f, itemY + 40.0f, 0.7f, 300.0f, 1.0f, C2D_Color32(200, 200, 200, listAlpha));
+                GFX_DrawRectSolid(10.0f, itemY + 40.0f, 0.7f, 300.0f, 1.0f, C2D_Color32(200, 200, 200, listAlpha));
             }
 
             if (!p->courier_paczka && p->paczka_openable) {
                 float btnX = 270.0f;
                 float btnY = detailsYOffset + 10.0f;
-                C2D_DrawRectSolid(btnX, btnY, 0.8f, 40.0f, 40.0f, C2D_Color32(0xFF, 0xAA, 0x00, listAlpha));
-                C2D_Text qrTxt;
-                C2D_TextParse(&qrTxt, eventListBuf, "QR");
-                C2D_TextOptimize(&qrTxt);
-                C2D_DrawText(&qrTxt, C2D_WithColor, btnX + 8.0f, btnY + 10.0f, 0.9f, 0.6f, 0.6f, C2D_Color32(255, 255, 255, listAlpha));
+                GFX_DrawRectSolid(btnX, btnY, 0.8f, 40.0f, 40.0f, C2D_Color32(0xFF, 0xAA, 0x00, listAlpha));
+                GFX_TEXT qrTxt;
+                GFX_TextParse(&qrTxt, eventListBuf, "QR");
+                GFX_TextOptimize(&qrTxt);
+                GFX_DrawText(&qrTxt, btnX + 8.0f, btnY + 10.0f, 0.9f, 0.6f, 0.6f, GFX_ALIGN_LEFT, C2D_Color32(255, 255, 255, listAlpha));
             }
         }
     }
@@ -1141,7 +1142,7 @@ void sceneHomeMenuRender(void) {
         float alphaFactor = pT;
 
         u8 dimAlpha = (u8)(150.0f * alphaFactor);
-        C2D_DrawRectSolid(0, 0, 0.96f, 320, 240, C2D_Color32(0, 0, 0, dimAlpha));
+        GFX_DrawRectSolid(0, 0, 0.96f, 320, 240, C2D_Color32(0, 0, 0, dimAlpha));
         
         float mwW = 260.0f;
         float mwH = 100.0f;
@@ -1152,36 +1153,36 @@ void sceneHomeMenuRender(void) {
         float curY = (240.0f - curH) / 2.0f;
 
         u8 bgAlpha = (u8)(255.0f * alphaFactor);
-        C2D_DrawRectSolid(curX, curY, 0.97f, curW, curH, C2D_Color32(255, 255, 255, bgAlpha));
+        GFX_DrawRectSolid(curX, curY, 0.97f, curW, curH, C2D_Color32(255, 255, 255, bgAlpha));
         
-        C2D_Text qText, optText;
-        C2D_TextBufClear(eventListBuf); 
+        GFX_TEXT qText, optText;
+        GFX_TextBufClear(eventListBuf); 
 
         if (showOpenConfirmation) {
-            C2D_TextParse(&qText, eventListBuf, "Czy chcesz otworzyć paczkomat?");
+            GFX_TextParse(&qText, eventListBuf, "Czy chcesz otworzyć paczkomat?");
         } else {
-            C2D_TextParse(&qText, eventListBuf, "Czy paczka została odebrana?");
+            GFX_TextParse(&qText, eventListBuf, "Czy paczka została odebrana?");
         }
-        C2D_TextParse(&optText, eventListBuf, "(A) Tak   (B) Nie");
+        GFX_TextParse(&optText, eventListBuf, "(A) Tak   (B) Nie");
         
-        C2D_TextOptimize(&qText);
-        C2D_TextOptimize(&optText);
+        GFX_TextOptimize(&qText);
+        GFX_TextOptimize(&optText);
         
         float tScale = 0.5f * ease;
         if (tScale < 0) tScale = 0;
 
         float wQ, hQ, wO, hO;
-        C2D_TextGetDimensions(&qText, tScale, tScale, &wQ, &hQ);
-        C2D_TextGetDimensions(&optText, tScale, tScale, &wO, &hO);
+        GFX_TextGetDimensions(&qText, tScale, tScale, &wQ, &hQ);
+        GFX_TextGetDimensions(&optText, tScale, tScale, &wO, &hO);
         
         u32 txtColor = C2D_Color32(0, 0, 0, bgAlpha);
-        C2D_DrawText(&qText, C2D_WithColor, 160.0f - (wQ/2), curY + (20.0f * ease), 0.98f, tScale, tScale, txtColor);
-        C2D_DrawText(&optText, C2D_WithColor, 160.0f - (wO/2), curY + (60.0f * ease), 0.98f, tScale, tScale, txtColor);
+        GFX_DrawText(&qText, 160.0f - (wQ/2), curY + (20.0f * ease), 0.98f, tScale, tScale, GFX_ALIGN_LEFT, txtColor);
+        GFX_DrawText(&optText, 160.0f - (wO/2), curY + (60.0f * ease), 0.98f, tScale, tScale, GFX_ALIGN_LEFT, txtColor);
     }
 
     if (inSettingsMode) {
         
-        C2D_DrawRectSolid(0, 0, 0.99f, 320, 240, C2D_Color32(0, 0, 0, 180));
+        GFX_DrawRectSolid(0, 0, 0.99f, 320, 240, C2D_Color32(0, 0, 0, 180));
         
 
         float mwW = 280.0f;
@@ -1189,14 +1190,14 @@ void sceneHomeMenuRender(void) {
         float curX = (320.0f - mwW) / 2.0f;
         float curY = (240.0f - mwH) / 2.0f; 
         
-        C2D_DrawRectSolid(curX, curY, 0.995f, mwW, mwH, C2D_Color32(255, 255, 255, 255));
+        GFX_DrawRectSolid(curX, curY, 0.995f, mwW, mwH, C2D_Color32(255, 255, 255, 255));
         
         
-        C2D_TextBufClear(eventListBuf);
-        C2D_Text titleTxt, valTxt, okTxt, restartMsg, tutTxt, dpadTxt; 
-        C2D_TextParse(&titleTxt, eventListBuf, "Ustawienia");
-        C2D_TextOptimize(&titleTxt);
-        C2D_DrawText(&titleTxt, C2D_WithColor, 160.0f - 40.0f, curY + 15.0f, 1.0f, 0.7f, 0.7f, C2D_Color32(0,0,0,255));
+        GFX_TextBufClear(eventListBuf);
+        GFX_TEXT titleTxt, valTxt, okTxt, restartMsg, tutTxt, dpadTxt; 
+        GFX_TextParse(&titleTxt, eventListBuf, "Ustawienia");
+        GFX_TextOptimize(&titleTxt);
+        GFX_DrawText(&titleTxt, 160.0f - 40.0f, curY + 15.0f, 1.0f, 0.7f, 0.7f, GFX_ALIGN_LEFT, C2D_Color32(0,0,0,255));
 
         
         char vaBuf[64];
@@ -1218,63 +1219,63 @@ void sceneHomeMenuRender(void) {
                 break;
         }
         
-        C2D_TextParse(&valTxt, eventListBuf, vaBuf);
-        C2D_TextOptimize(&valTxt);
+        GFX_TextParse(&valTxt, eventListBuf, vaBuf);
+        GFX_TextOptimize(&valTxt);
         
         float wV, hV;
-        C2D_TextGetDimensions(&valTxt, 0.8f, 0.8f, &wV, &hV);
-        C2D_DrawText(&valTxt, C2D_WithColor, 160.0f - (wV/2.0f), curY + 45.0f, 1.0f, 0.8f, 0.8f, C2D_Color32(50,50,50,255));
+        GFX_TextGetDimensions(&valTxt, 0.8f, 0.8f, &wV, &hV);
+        GFX_DrawText(&valTxt, 160.0f - (wV/2.0f), curY + 45.0f, 1.0f, 0.8f, 0.8f, GFX_ALIGN_LEFT, C2D_Color32(50,50,50,255));
 
-        C2D_TextParse(&dpadTxt, eventListBuf, "(D-Pad)");
-        C2D_TextOptimize(&dpadTxt);
+        GFX_TextParse(&dpadTxt, eventListBuf, "(D-Pad)");
+        GFX_TextOptimize(&dpadTxt);
         float wD, hD;
-        C2D_TextGetDimensions(&dpadTxt, 0.5f, 0.5f, &wD, &hD);
-        C2D_DrawText(&dpadTxt, C2D_WithColor, 160.0f - (wD/2.0f), curY + 70.0f, 1.0f, 0.5f, 0.5f, C2D_Color32(100,100,100,255));
+        GFX_TextGetDimensions(&dpadTxt, 0.5f, 0.5f, &wD, &hD);
+        GFX_DrawText(&dpadTxt, 160.0f - (wD/2.0f), curY + 70.0f, 1.0f, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(100,100,100,255));
 
 
         float tutBtnY = curY + 100.0f;
         bool voiceChanged = (VOICEACT != initialVoiceAct);
 
         if (voiceChanged) {
-            C2D_DrawRectSolid(160.0f - 70.0f, tutBtnY, 1.0f, 140.0f, 30.0f, C2D_Color32(150, 150, 150, 255));
-            C2D_TextParse(&tutTxt, eventListBuf, "Samouczek");
-            C2D_TextOptimize(&tutTxt);
+            GFX_DrawRectSolid(160.0f - 70.0f, tutBtnY, 1.0f, 140.0f, 30.0f, C2D_Color32(150, 150, 150, 255));
+            GFX_TextParse(&tutTxt, eventListBuf, "Samouczek");
+            GFX_TextOptimize(&tutTxt);
             float wT, hT;
-            C2D_TextGetDimensions(&tutTxt, 0.6f, 0.6f, &wT, &hT);
-            C2D_DrawText(&tutTxt, C2D_WithColor, 160.0f - (wT/2.0f), tutBtnY + 5.0f, 1.0f, 0.6f, 0.6f, C2D_Color32(100,100,100,255));
+            GFX_TextGetDimensions(&tutTxt, 0.6f, 0.6f, &wT, &hT);
+            GFX_DrawText(&tutTxt, 160.0f - (wT/2.0f), tutBtnY + 5.0f, 1.0f, 0.6f, 0.6f, GFX_ALIGN_LEFT, C2D_Color32(100,100,100,255));
         } else {
-            C2D_DrawRectSolid(160.0f - 70.0f, tutBtnY, 1.0f, 140.0f, 30.0f, C2D_Color32(200, 200, 200, 255));
-            C2D_TextParse(&tutTxt, eventListBuf, "Samouczek");
-            C2D_TextOptimize(&tutTxt);
+            GFX_DrawRectSolid(160.0f - 70.0f, tutBtnY, 1.0f, 140.0f, 30.0f, C2D_Color32(200, 200, 200, 255));
+            GFX_TextParse(&tutTxt, eventListBuf, "Samouczek");
+            GFX_TextOptimize(&tutTxt);
             float wT, hT;
-            C2D_TextGetDimensions(&tutTxt, 0.6f, 0.6f, &wT, &hT);
-            C2D_DrawText(&tutTxt, C2D_WithColor, 160.0f - (wT/2.0f), tutBtnY + 5.0f, 1.0f, 0.6f, 0.6f, C2D_Color32(0,0,0,255));
+            GFX_TextGetDimensions(&tutTxt, 0.6f, 0.6f, &wT, &hT);
+            GFX_DrawText(&tutTxt, 160.0f - (wT/2.0f), tutBtnY + 5.0f, 1.0f, 0.6f, 0.6f, GFX_ALIGN_LEFT, C2D_Color32(0,0,0,255));
         }
 
-        C2D_TextParse(&restartMsg, eventListBuf, "(Zapisanie zmian spowoduje restart)");
-        C2D_TextOptimize(&restartMsg);
+        GFX_TextParse(&restartMsg, eventListBuf, "(Zapisanie zmian spowoduje restart)");
+        GFX_TextOptimize(&restartMsg);
         float wM, hM;
-        C2D_TextGetDimensions(&restartMsg, 0.5f, 0.5f, &wM, &hM);
+        GFX_TextGetDimensions(&restartMsg, 0.5f, 0.5f, &wM, &hM);
         
-        C2D_DrawText(&restartMsg, C2D_WithColor, 160.0f - (wM/2.0f), curY + 145.0f, 1.0f, 0.5f, 0.5f, C2D_Color32(200,0,0,255));
+        GFX_DrawText(&restartMsg, 160.0f - (wM/2.0f), curY + 145.0f, 1.0f, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(200,0,0,255));
         
 
         float okBtnY = curY + 170.0f;
-        C2D_DrawRectSolid(160.0f - 50.0f, okBtnY, 1.0f, 100.0f, 30.0f, C2D_Color32(0, 150, 0, 255));
-        C2D_TextParse(&okTxt, eventListBuf, "OK (A)");
-        C2D_TextOptimize(&okTxt);
-        C2D_DrawText(&okTxt, C2D_WithColor, 160.0f - 23.5f, okBtnY + 5.0f, 1.0f, 0.6f, 0.6f, C2D_Color32(255,255,255,255));
+        GFX_DrawRectSolid(160.0f - 50.0f, okBtnY, 1.0f, 100.0f, 30.0f, C2D_Color32(0, 150, 0, 255));
+        GFX_TextParse(&okTxt, eventListBuf, "OK (A)");
+        GFX_TextOptimize(&okTxt);
+        GFX_DrawText(&okTxt, 160.0f - 23.5f, okBtnY + 5.0f, 1.0f, 0.6f, 0.6f, GFX_ALIGN_LEFT, C2D_Color32(255,255,255,255));
 
-        C2D_Text cancelTxt;
-        C2D_TextParse(&cancelTxt, eventListBuf, "B - Anuluj");
-        C2D_TextOptimize(&cancelTxt);
+        GFX_TEXT cancelTxt;
+        GFX_TextParse(&cancelTxt, eventListBuf, "B - Anuluj");
+        GFX_TextOptimize(&cancelTxt);
         float wC, hC;
-        C2D_TextGetDimensions(&cancelTxt, 0.5f, 0.5f, &wC, &hC);
-        C2D_DrawText(&cancelTxt, C2D_WithColor, 160.0f - (wC/2.0f), curY + 203.0f, 1.0f, 0.5f, 0.5f, C2D_Color32(100,100,100,255));
+        GFX_TextGetDimensions(&cancelTxt, 0.5f, 0.5f, &wC, &hC);
+        GFX_DrawText(&cancelTxt, 160.0f - (wC/2.0f), curY + 203.0f, 1.0f, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(100,100,100,255));
     }   
     if (openingSpinnerAlpha > 0.0f) {
         u8 spinBgAlpha = (u8)(100.0f * openingSpinnerAlpha);
-        C2D_DrawRectSolid(0, 0, 0.985f, 320, 240, C2D_Color32(0, 0, 0, spinBgAlpha));
+        GFX_DrawRectSolid(0, 0, 0.985f, 320, 240, C2D_Color32(0, 0, 0, spinBgAlpha));
         drawSpinner(160.0f, 120.0f, openingSpinnerAlpha);
     }
 
@@ -1283,13 +1284,13 @@ void sceneHomeMenuRender(void) {
         if (fadeProgress > 1.0f) fadeProgress = 1.0f;
         float fadeValue = 1.0f - fadeProgress;
         uint8_t alpha = (uint8_t)(fadeValue * 255.0f);
-        C2D_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, alpha));
+        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, alpha));
     }
 }
 
 void sceneHomeMenuExit(void) {
-    C2D_TextBufDelete(detailsTextBuf);
-    C2D_TextBufDelete(eventListBuf);
+    GFX_TextBufDelete(detailsTextBuf);
+    GFX_TextBufDelete(eventListBuf);
     
     tryToGetPaczkas = false;
     paczkas.done = false;

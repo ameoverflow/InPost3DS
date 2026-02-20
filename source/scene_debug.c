@@ -6,6 +6,7 @@
 #include "sprites.h"
 #include "inpost_api.h"
 #include "text.h"
+#include "drawing.h"
 
 #define DEBUG_MENU_ITEMS 6
 
@@ -18,27 +19,27 @@ const float menuLineHeight = 28.0f;
 bool paczkashow = false;
 bool fake_paczka_mode = false;
 
-C2D_TextBuf DebugMenu;
-C2D_Text debugmenu_Text[50];
+GFX_TEXTBUF DebugMenu;
+GFX_TEXT debugmenu_Text[50];
 
 
 void RebuildDebugMenuStaticText(void) {
-    C2D_TextParse(&debugmenu_Text[0], DebugMenu, "INPOST3DS debug menu");
-    C2D_TextParse(&debugmenu_Text[1], DebugMenu, "Zbierz dane do testów (logi)");
-    C2D_TextParse(&debugmenu_Text[2], DebugMenu, "Odśwież token (/v1/authenticate)");
-    C2D_TextParse(&debugmenu_Text[3], DebugMenu, "Pokaż Fake'owe paczki (romfs://test_data.json)");
-    C2D_TextParse(&debugmenu_Text[4], DebugMenu, "Pokaż prawdziwe paczki (/parcels/tracked)");
-    C2D_TextParse(&debugmenu_Text[5], DebugMenu, "Tutorial Menu");
-    C2D_TextParse(&debugmenu_Text[10], DebugMenu, ">");
+    GFX_TextParse(&debugmenu_Text[0], DebugMenu, "INPOST3DS debug menu");
+    GFX_TextParse(&debugmenu_Text[1], DebugMenu, "Zbierz dane do testów (logi)");
+    GFX_TextParse(&debugmenu_Text[2], DebugMenu, "Odśwież token (/v1/authenticate)");
+    GFX_TextParse(&debugmenu_Text[3], DebugMenu, "Pokaż Fake'owe paczki (romfs://test_data.json)");
+    GFX_TextParse(&debugmenu_Text[4], DebugMenu, "Pokaż prawdziwe paczki (/parcels/tracked)");
+    GFX_TextParse(&debugmenu_Text[5], DebugMenu, "Tutorial Menu");
+    GFX_TextParse(&debugmenu_Text[10], DebugMenu, ">");
     
-    C2D_TextOptimize(&debugmenu_Text[10]);
+    GFX_TextOptimize(&debugmenu_Text[10]);
     for (int i = 0; i < 6; i++) 
-        C2D_TextOptimize(&debugmenu_Text[i]);
+        GFX_TextOptimize(&debugmenu_Text[i]);
 }
 
 void sceneDebugInit(void) {
-    DebugMenu = C2D_TextBufNew(4096); 
-    C2D_TextBufClear(DebugMenu);
+    DebugMenu = GFX_TextBufNew(4096); 
+    GFX_TextBufClear(DebugMenu);
     RebuildDebugMenuStaticText();
 }
 
@@ -69,23 +70,23 @@ void sceneDebugUpdate(uint32_t kDown, uint32_t kHeld) {
                 paczkashow = false;
                 
                 
-                C2D_TextBufClear(DebugMenu);
+                GFX_TextBufClear(DebugMenu);
                 RebuildDebugMenuStaticText(); 
                 
                 
                 parseFakePaczkas();
                 
                 if (paczka_count > 0) {
-                    C2D_TextParse(&debugmenu_Text[11], DebugMenu, paczka_list[0].pickupPointName);
-                    C2D_TextParse(&debugmenu_Text[12], DebugMenu, paczka_list[0].city);
-                    C2D_TextParse(&debugmenu_Text[13], DebugMenu, paczka_list[0].status);
-                    C2D_TextParse(&debugmenu_Text[14], DebugMenu, paczka_list[0].shipmentNumber);
+                    GFX_TextParse(&debugmenu_Text[11], DebugMenu, paczka_list[0].pickupPointName);
+                    GFX_TextParse(&debugmenu_Text[12], DebugMenu, paczka_list[0].city);
+                    GFX_TextParse(&debugmenu_Text[13], DebugMenu, paczka_list[0].status);
+                    GFX_TextParse(&debugmenu_Text[14], DebugMenu, paczka_list[0].shipmentNumber);
                 }
                 if (paczka_count > 1) {
-                    C2D_TextParse(&debugmenu_Text[15], DebugMenu, paczka_list[1].pickupPointName);
-                    C2D_TextParse(&debugmenu_Text[16], DebugMenu, paczka_list[1].city);
-                    C2D_TextParse(&debugmenu_Text[17], DebugMenu, paczka_list[1].status);
-                    C2D_TextParse(&debugmenu_Text[18], DebugMenu, paczka_list[1].shipmentNumber);
+                    GFX_TextParse(&debugmenu_Text[15], DebugMenu, paczka_list[1].pickupPointName);
+                    GFX_TextParse(&debugmenu_Text[16], DebugMenu, paczka_list[1].city);
+                    GFX_TextParse(&debugmenu_Text[17], DebugMenu, paczka_list[1].status);
+                    GFX_TextParse(&debugmenu_Text[18], DebugMenu, paczka_list[1].shipmentNumber);
                 }
                 paczkashow = true;
                 break;
@@ -94,23 +95,23 @@ void sceneDebugUpdate(uint32_t kDown, uint32_t kHeld) {
                 paczkashow = false;
 
                 
-                C2D_TextBufClear(DebugMenu);
+                GFX_TextBufClear(DebugMenu);
                 RebuildDebugMenuStaticText();
                 
 
                 parsePaczkas((const char*)paczkas.data);
 
                 if (paczka_count > 0) {
-                    C2D_TextParse(&debugmenu_Text[11], DebugMenu, paczka_list[0].pickupPointName);
-                    C2D_TextParse(&debugmenu_Text[12], DebugMenu, paczka_list[0].city);
-                    C2D_TextParse(&debugmenu_Text[13], DebugMenu, paczka_list[0].status);
-                    C2D_TextParse(&debugmenu_Text[14], DebugMenu, paczka_list[0].shipmentNumber);
+                    GFX_TextParse(&debugmenu_Text[11], DebugMenu, paczka_list[0].pickupPointName);
+                    GFX_TextParse(&debugmenu_Text[12], DebugMenu, paczka_list[0].city);
+                    GFX_TextParse(&debugmenu_Text[13], DebugMenu, paczka_list[0].status);
+                    GFX_TextParse(&debugmenu_Text[14], DebugMenu, paczka_list[0].shipmentNumber);
                 }
                 if (paczka_count > 1) {
-                    C2D_TextParse(&debugmenu_Text[15], DebugMenu, paczka_list[1].pickupPointName);
-                    C2D_TextParse(&debugmenu_Text[16], DebugMenu, paczka_list[1].city);
-                    C2D_TextParse(&debugmenu_Text[17], DebugMenu, paczka_list[1].status);
-                    C2D_TextParse(&debugmenu_Text[18], DebugMenu, paczka_list[1].shipmentNumber);
+                    GFX_TextParse(&debugmenu_Text[15], DebugMenu, paczka_list[1].pickupPointName);
+                    GFX_TextParse(&debugmenu_Text[16], DebugMenu, paczka_list[1].city);
+                    GFX_TextParse(&debugmenu_Text[17], DebugMenu, paczka_list[1].status);
+                    GFX_TextParse(&debugmenu_Text[18], DebugMenu, paczka_list[1].shipmentNumber);
                 }
                 paczkashow = true;
                 break;
@@ -127,9 +128,9 @@ void sceneDebugRender(void) {
     C2D_TargetClear(left, C2D_Color32(0, 0, 0, 255));
 
     
-    drawShadowedText(
+    GFX_DrawShadowedText(
         &debugmenu_Text[0],
-        200.0f, 20.0f, 1.0f, 1.0f, 1.0f,
+        200.0f, 20.0f, 1.0f, 1.0f, 1.0f, GFX_ALIGN_CENTER,
         C2D_Color32(0xB1, 0xA2, 0x2F, 0xff),
         C2D_Color32(0xff, 0xff, 0xff, 0xff)
     );
@@ -140,11 +141,10 @@ void sceneDebugRender(void) {
 
         
         if (i == debugMenuSelected) {
-            C2D_DrawText(
+            GFX_DrawText(
                 &debugmenu_Text[10],
-                C2D_AtBaseline | C2D_WithColor,
                 15.0f, y,
-                0.5f, 0.5f, 0.5f,
+                0.5f, 0.5f, 0.5f, GFX_ALIGN_LEFT,
                 C2D_Color32(255, 255, 255, 255)
             );
         }
@@ -153,11 +153,10 @@ void sceneDebugRender(void) {
             ? C2D_Color32(255, 255, 0, 255)
             : C2D_Color32(200, 200, 200, 255);
 
-        C2D_DrawText(
+        GFX_DrawText(
             &debugmenu_Text[i + 1],
-            C2D_AtBaseline | C2D_WithColor,
             30.0f, y,
-            0.5f, 0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f, GFX_ALIGN_LEFT,
             color
         );
     }
@@ -170,14 +169,14 @@ void sceneDebugRender(void) {
         if (paczka_count > 0) {
             float y = 15.0f;
             for(int k=11; k<=14; k++) {
-                C2D_DrawText(&debugmenu_Text[k], C2D_AtBaseline | C2D_WithColor, 15.0f, y, 0.5f, 0.5f, 0.5f, C2D_Color32(255, 255, 255, 255));
+                GFX_DrawText(&debugmenu_Text[k], 15.0f, y, 0.5f, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(255, 255, 255, 255));
                 y += 15.0f;
             }
         }
         if (paczka_count > 1) {
             float y = 90.0f;
             for(int k=15; k<=18; k++) {
-                C2D_DrawText(&debugmenu_Text[k], C2D_AtBaseline | C2D_WithColor, 15.0f, y, 0.5f, 0.5f, 0.5f, C2D_Color32(255, 255, 255, 255));
+                GFX_DrawText(&debugmenu_Text[k], 15.0f, y, 0.5f, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(255, 255, 255, 255));
                 y += 15.0f;
             }
         }
@@ -185,5 +184,5 @@ void sceneDebugRender(void) {
 }
 
 void sceneDebugExit(void) {
-    C2D_TextBufDelete(DebugMenu);
+    GFX_TextBufDelete(DebugMenu);
 }

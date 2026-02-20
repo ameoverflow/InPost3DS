@@ -8,6 +8,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include "scene_debug.h"
+#include "drawing.h"
 
 float easeOutCubicIntro(float t) {
     return 1 - powf(1 - t, 3);
@@ -20,8 +21,8 @@ static bool animationDone = false;
 static bool waitingDone = false;
 static bool secondAnimDone = false;
 
-C2D_TextBuf textBuf;
-C2D_Text text;
+GFX_TEXTBUF textBuf;
+GFX_TEXT text;
 
 static bool textAnimationStarted = false;
 
@@ -50,7 +51,7 @@ void sceneIntroInit(void) {
     
     playCwav(2, true); 
 
-    textBuf = C2D_TextBufNew(128);
+    textBuf = GFX_TextBufNew(128);
 }
 
 void sceneIntroUpdate(uint32_t kDown, uint32_t kHeld) {
@@ -85,8 +86,8 @@ void sceneIntroUpdate(uint32_t kDown, uint32_t kHeld) {
 
                 const char* stages[] = { "TehFridge", "Teh", "TehFri" };
                 if (bounceStage != lastBounceStage) {
-                    C2D_TextParse(&text, textBuf, stages[bounceStage]);
-                    C2D_TextOptimize(&text);
+                    GFX_TextParse(&text, textBuf, stages[bounceStage]);
+                    GFX_TextOptimize(&text);
                     lastBounceStage = bounceStage;
                 }
 
@@ -94,8 +95,8 @@ void sceneIntroUpdate(uint32_t kDown, uint32_t kHeld) {
                 if (bounceCount >= 3) {  
                     bounceFinished = true;
                     bounceStage = 0;
-                    C2D_TextParse(&text, textBuf, stages[bounceStage]);
-                    C2D_TextOptimize(&text);
+                    GFX_TextParse(&text, textBuf, stages[bounceStage]);
+                    GFX_TextOptimize(&text);
                     lastBounceStage = bounceStage;
 
                     flashTimer = FLASH_DURATION;  
@@ -154,8 +155,8 @@ void sceneIntroRender(void) {
         scale = 0.22f;
     }
 
-    float imgW = fridge_image.subtex->width * scale;
-    float imgH = fridge_image.subtex->height * scale;
+    float imgW = fridge_image->width * scale;
+    float imgH = fridge_image->height * scale;
 
     float centerX = 400.0f / 2.0f;
     float centerY = 240.0f / 2.0f;
@@ -163,7 +164,7 @@ void sceneIntroRender(void) {
     float drawX = centerX - imgW / 2.0f;
     float drawY = centerY - imgH / 2.0f;
     
-    C2D_DrawImageAt(
+    GFX_DrawImageAt(
         fridge_image,
         drawX - (3 * slider), drawY + 10.0f,
         0.1f,
@@ -173,7 +174,7 @@ void sceneIntroRender(void) {
 
     C2D_SceneBegin(right);
     if (slider != 0.0) {
-        C2D_DrawImageAt(
+        GFX_DrawImageAt(
             fridge_image,
             drawX + (3 * slider), drawY + 10.0f,
             0.1f,
@@ -195,34 +196,34 @@ void sceneIntroRender(void) {
         float textX = 400.0f / 2.0f;
 
         float textWidth, textHeight;
-        C2D_TextGetDimensions(&text, 1.0f, 1.0f, &textWidth, &textHeight);
+        GFX_TextGetDimensions(&text, 1.0f, 1.0f, &textWidth, &textHeight);
 
         float drawX = textX - (textWidth * bounceScale) / 2.0f;
 
-        C2D_DrawText(&text, C2D_WithColor, drawX - (3 * slider), 20.0f, 1.0f, bounceScale, bounceScale, C2D_Color32(235, 0, 146, 255));
+        GFX_DrawText(&text, drawX - (3 * slider), 20.0f, 1.0f, bounceScale, bounceScale, GFX_ALIGN_LEFT, C2D_Color32(235, 0, 146, 255));
 
         if (slider != 0.0) {
             C2D_SceneBegin(right);
-            C2D_DrawText(&text, C2D_WithColor, drawX + (3 * slider), 20.0f, 1.0f, bounceScale, bounceScale, C2D_Color32(235, 0, 146, 255));
+            GFX_DrawText(&text, drawX + (3 * slider), 20.0f, 1.0f, bounceScale, bounceScale, GFX_ALIGN_LEFT, C2D_Color32(235, 0, 146, 255));
             C2D_SceneBegin(left);
         }
     }
 
     if (flashTimer > 0.0f) {
         float alpha = (flashTimer / FLASH_DURATION) * 255.0f;
-        C2D_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, (uint8_t)alpha));
+        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, (uint8_t)alpha));
         if (slider != 0.0f) {
             C2D_SceneBegin(right);
-            C2D_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, (uint8_t)alpha));
+            GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, (uint8_t)alpha));
             C2D_SceneBegin(left);
         }
     }
     if (fadeStarted) {
         float alpha = (fadeTimer / FADE_DURATION) * 255.0f;
-        C2D_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(0, 0, 0, (uint8_t)alpha));
+        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(0, 0, 0, (uint8_t)alpha));
         if (slider != 0.0f) {
             C2D_SceneBegin(right);
-            C2D_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(0, 0, 0, (uint8_t)alpha));
+            GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(0, 0, 0, (uint8_t)alpha));
             C2D_SceneBegin(left);
         }
     }
@@ -231,13 +232,13 @@ void sceneIntroRender(void) {
     C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255));
     if (flashTimer > 0.0f) {
         float alpha = (flashTimer / FLASH_DURATION) * 255.0f;
-        C2D_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, (uint8_t)alpha));
+        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, (uint8_t)alpha));
     }
 }
 
 void sceneIntroExit(void) {
     if (textBuf) {
-        C2D_TextBufDelete(textBuf);
+        GFX_TextBufDelete(textBuf);
         textBuf = NULL;
     }
     

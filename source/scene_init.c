@@ -12,6 +12,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <time.h>
+#include "drawing.h"
 
 #include "scene_init.h"
 #include "scene_manager.h"
@@ -50,8 +51,8 @@ typedef enum {
 } InitState;
 
 static InitState currentState;
-static C2D_TextBuf staticTextBuf;
-static C2D_Text txtNoWifi, txtCertError, txtNtpFixing, txtTitle, txtOptA, txtOptX, txtOptY, txtOptB;
+static GFX_TEXTBUF staticTextBuf;
+static GFX_TEXT txtNoWifi, txtCertError, txtNtpFixing, txtTitle, txtOptA, txtOptX, txtOptY, txtOptB;
 
 static float animTimer = 0.0f;
 static float animFactor = 0.0f; 
@@ -129,9 +130,9 @@ static void drawRoundedBoxGradient(float x, float y, float z, float w, float h, 
 static void drawRoundedBoxSolid(float x, float y, float z, float w, float h, u32 color, float r) {
     if (r * 2 > w) r = w / 2;
     if (r * 2 > h) r = h / 2;
-    C2D_DrawRectSolid(x + r, y, z, w - 2 * r, h, color);
-    C2D_DrawRectSolid(x, y + r, z, r, h - 2 * r, color);
-    C2D_DrawRectSolid(x + w - r, y + r, z, r, h - 2 * r, color);
+    GFX_DrawRectSolid(x + r, y, z, w - 2 * r, h, color);
+    GFX_DrawRectSolid(x, y + r, z, r, h - 2 * r, color);
+    GFX_DrawRectSolid(x + w - r, y + r, z, r, h - 2 * r, color);
     C2D_DrawCircleSolid(x + r, y + r, z, r, color);
     C2D_DrawCircleSolid(x + w - r, y + r, z, r, color);
     C2D_DrawCircleSolid(x + r, y + h - r, z, r, color);
@@ -150,27 +151,27 @@ void sceneInitInit(void) {
     srand(time(NULL));
 
     random_val = rand() % 500;  
-    staticTextBuf = C2D_TextBufNew(4096);
+    staticTextBuf = GFX_TextBufNew(4096);
 
-    C2D_TextParse(&txtNoWifi, staticTextBuf, "Brak Internetu, podłącz aplikacje do internetu");
-    C2D_TextParse(&txtCertError, staticTextBuf, "CERT ERROR!\nCzas w 3DS'ie jest niepoprawny, zmień go na aktualny\nWciśnij (START) by wyjść.");
-    C2D_TextParse(&txtNtpFixing, staticTextBuf, "Błąd SSL. Próba naprawy czasu (NTP)...");
+    GFX_TextParse(&txtNoWifi, staticTextBuf, "Brak Internetu, podłącz aplikacje do internetu");
+    GFX_TextParse(&txtCertError, staticTextBuf, "CERT ERROR!\nCzas w 3DS'ie jest niepoprawny, zmień go na aktualny\nWciśnij (START) by wyjść.");
+    GFX_TextParse(&txtNtpFixing, staticTextBuf, "Błąd SSL. Próba naprawy czasu (NTP)...");
     
-    C2D_TextParse(&txtTitle, staticTextBuf, "Wybierz głos nawigatora głosowego");
+    GFX_TextParse(&txtTitle, staticTextBuf, "Wybierz głos nawigatora głosowego");
     
-    C2D_TextParse(&txtOptA, staticTextBuf, "(A) Mężczyzna");
-    C2D_TextParse(&txtOptX, staticTextBuf, "(X) Kobieta");
-    C2D_TextParse(&txtOptY, staticTextBuf, "(Y) Niebinarny");
-    C2D_TextParse(&txtOptB, staticTextBuf, "(B) Brak");
+    GFX_TextParse(&txtOptA, staticTextBuf, "(A) Mężczyzna");
+    GFX_TextParse(&txtOptX, staticTextBuf, "(X) Kobieta");
+    GFX_TextParse(&txtOptY, staticTextBuf, "(Y) Niebinarny");
+    GFX_TextParse(&txtOptB, staticTextBuf, "(B) Brak");
 
-    C2D_TextOptimize(&txtNoWifi);
-    C2D_TextOptimize(&txtCertError);
-    C2D_TextOptimize(&txtNtpFixing);
-    C2D_TextOptimize(&txtTitle);
-    C2D_TextOptimize(&txtOptA);
-    C2D_TextOptimize(&txtOptX);
-    C2D_TextOptimize(&txtOptY);
-    C2D_TextOptimize(&txtOptB);
+    GFX_TextOptimize(&txtNoWifi);
+    GFX_TextOptimize(&txtCertError);
+    GFX_TextOptimize(&txtNtpFixing);
+    GFX_TextOptimize(&txtTitle);
+    GFX_TextOptimize(&txtOptA);
+    GFX_TextOptimize(&txtOptX);
+    GFX_TextOptimize(&txtOptY);
+    GFX_TextOptimize(&txtOptB);
     
     if (access("/3ds/InPost3DS/opcje.json", F_OK) == 0) {
         json_t *jsonfl = json_load_file("/3ds/InPost3DS/opcje.json", 0, NULL);
@@ -378,30 +379,30 @@ void sceneInitRender(void) {
     
     if (currentState == STATE_NO_WIFI) {
         float textW = 0, textH = 0;
-        C2D_TextGetDimensions(&txtNoWifi, 0.5f, 0.5f, &textW, &textH);
-        C2D_DrawText(&txtNoWifi, C2D_WithColor, (screenW - textW)/2, (screenH - textH)/2, 0, 0.5f, 0.5f, C2D_Color32(255, 0, 0, 255));
+        GFX_TextGetDimensions(&txtNoWifi, 0.5f, 0.5f, &textW, &textH);
+        GFX_DrawText(&txtNoWifi, (screenW - textW)/2, (screenH - textH)/2, 0, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(255, 0, 0, 255));
         return; 
     }
 
     if (currentState == STATE_CERT_ERROR) {
         float textW = 0, textH = 0;
-        C2D_TextGetDimensions(&txtCertError, 0.5f, 0.5f, &textW, &textH);
-        C2D_DrawText(&txtCertError, C2D_WithColor, (screenW - textW)/2, (screenH - textH)/2, 0, 0.5f, 0.5f, C2D_Color32(255, 0, 0, 255));
+        GFX_TextGetDimensions(&txtCertError, 0.5f, 0.5f, &textW, &textH);
+        GFX_DrawText(&txtCertError, (screenW - textW)/2, (screenH - textH)/2, 0, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(255, 0, 0, 255));
         return;
     }
 
     
     if (currentState == STATE_ATTEMPT_NTP || currentState == STATE_WAIT_NTP) {
         float textW = 0, textH = 0;
-        C2D_TextGetDimensions(&txtNtpFixing, 0.5f, 0.5f, &textW, &textH);
-        C2D_DrawText(&txtNtpFixing, C2D_WithColor, (screenW - textW)/2, (screenH - textH)/2, 0, 0.5f, 0.5f, C2D_Color32(255, 255, 0, 255));
+        GFX_TextGetDimensions(&txtNtpFixing, 0.5f, 0.5f, &textW, &textH);
+        GFX_DrawText(&txtNtpFixing, (screenW - textW)/2, (screenH - textH)/2, 0, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(255, 255, 0, 255));
         return;
     }
 
     if (currentState >= STATE_ANIM_IN && currentState <= STATE_ANIM_OUT) {
         float alphaFactor = (currentState == STATE_ANIM_OUT) ? animFactor : (animTimer > 1.0f ? 1.0f : animTimer); 
         u8 dimAlpha = (u8)(150.0f * alphaFactor);
-        C2D_DrawRectSolid(0, 0, 0.5f, screenW, screenH, C2D_Color32(0, 0, 0, dimAlpha));
+        GFX_DrawRectSolid(0, 0, 0.5f, screenW, screenH, C2D_Color32(0, 0, 0, dimAlpha));
         
         float finalBoxW = 320.0f;
         float finalBoxH = 180.0f;
@@ -438,13 +439,13 @@ void sceneInitRender(void) {
         
         if (curTextScale > 0.01f) {
             float wT, hT;
-            C2D_TextGetDimensions(&txtTitle, curTextScale, curTextScale, &wT, &hT);
+            GFX_TextGetDimensions(&txtTitle, curTextScale, curTextScale, &wT, &hT);
             u32 clrTitle = C2D_Color32(255, 235, 59, 255);
 
-            C2D_DrawText(&txtTitle, C2D_WithColor, 
+            GFX_DrawText(&txtTitle, 
                 (screenW - wT)/2.0f, 
                 curY + (15.0f * animFactor), 
-                0.7f, curTextScale, curTextScale, clrTitle);
+                0.7f, curTextScale, curTextScale, GFX_ALIGN_LEFT, clrTitle);
 
             float optScale = 0.6f * animFactor;
             float startY = curY + (60.0f * animFactor);
@@ -452,26 +453,26 @@ void sceneInitRender(void) {
             u32 clrText = C2D_Color32(255, 255, 255, 255);
 
             float wX, hX;
-            C2D_TextGetDimensions(&txtOptX, optScale, optScale, &wX, &hX);
-            C2D_DrawText(&txtOptX, C2D_WithColor, (screenW - wX)/2, startY, 0.7f, optScale, optScale, clrText);
+            GFX_TextGetDimensions(&txtOptX, optScale, optScale, &wX, &hX);
+            GFX_DrawText(&txtOptX, (screenW - wX)/2, startY, 0.7f, optScale, optScale, GFX_ALIGN_LEFT, clrText);
 
             float wA, hA;
-            C2D_TextGetDimensions(&txtOptA, optScale, optScale, &wA, &hA);
-            C2D_DrawText(&txtOptA, C2D_WithColor, (screenW - wA)/2, startY + gapY, 0.7f, optScale, optScale, clrText);
+            GFX_TextGetDimensions(&txtOptA, optScale, optScale, &wA, &hA);
+            GFX_DrawText(&txtOptA, (screenW - wA)/2, startY + gapY, 0.7f, optScale, optScale, GFX_ALIGN_LEFT, clrText);
 
             float wY_dim, hY_dim;
-            C2D_TextGetDimensions(&txtOptY, optScale, optScale, &wY_dim, &hY_dim);
-            C2D_DrawText(&txtOptY, C2D_WithColor, (screenW - wY_dim)/2, startY + gapY*2, 0.7f, optScale, optScale, clrText);
+            GFX_TextGetDimensions(&txtOptY, optScale, optScale, &wY_dim, &hY_dim);
+            GFX_DrawText(&txtOptY, (screenW - wY_dim)/2, startY + gapY*2, 0.7f, optScale, optScale, GFX_ALIGN_LEFT, clrText);
 
             float wB, hB;
-            C2D_TextGetDimensions(&txtOptB, optScale, optScale, &wB, &hB);
-            C2D_DrawText(&txtOptB, C2D_WithColor, (screenW - wB)/2, startY + gapY*3, 0.7f, optScale, optScale, clrText);
+            GFX_TextGetDimensions(&txtOptB, optScale, optScale, &wB, &hB);
+            GFX_DrawText(&txtOptB, (screenW - wB)/2, startY + gapY*3, 0.7f, optScale, optScale, GFX_ALIGN_LEFT, clrText);
         }
     }
     C2D_SceneBegin(bottom);
     C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255));
     if (random_val == 213) {
-        C2D_DrawImageAt(sie_do_wiezienia, 0.0f, 0.0f, 0.5f, NULL, 1.0f, 1.0f);
+        GFX_DrawImageAt(sie_do_wiezienia, 0.0f, 0.0f, 0.5f, NULL, 1.0f, 1.0f);
     }
 }
 
@@ -479,5 +480,5 @@ void sceneInitExit(void) {
     if (ntpSock >= 0) {
         close(ntpSock);
     }
-    C2D_TextBufDelete(staticTextBuf);
+    GFX_TextBufDelete(staticTextBuf);
 }
