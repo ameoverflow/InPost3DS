@@ -249,7 +249,7 @@ void updatePaczkaText(void) {
         snprintf(addressBuffer, sizeof(addressBuffer), "%s, %s", sel->street, sel->city);
     }
 
-    GFX_TextParse(&text_status, detailsTextBuf, sel->status);
+    GFX_TextParse(&text_status, detailsTextBuf, sel->latestEvent);
     GFX_TextParse(&text_name, detailsTextBuf, sel->pickupPointName);
     GFX_TextParse(&text_addr, detailsTextBuf, addressBuffer);
     char storedPretty[32];
