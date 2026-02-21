@@ -176,7 +176,7 @@ void sceneMainMenuInit(void) {
         GFX_TextParse(
         &menu_Text[2],
         MainMenu,
-        "Ver 1.0.1");
+        "Ver 1.0.2");
     #endif              
 }
 
