@@ -374,20 +374,20 @@ void sceneInitUpdate(uint32_t kDown, uint32_t kHeld) {
 void sceneInitRender(void) {
     float screenW = 400.0f;
     float screenH = 240.0f;
-    C2D_SceneBegin(left);
-    C2D_TargetClear(left, C2D_Color32(0, 0, 0, 255));
+    GFX_BeginSceneTop(0, true);
+    
     
     if (currentState == STATE_NO_WIFI) {
         float textW = 0, textH = 0;
         GFX_TextGetDimensions(&txtNoWifi, 0.5f, 0.5f, &textW, &textH);
-        GFX_DrawText(&txtNoWifi, (screenW - textW)/2, (screenH - textH)/2, 0, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(255, 0, 0, 255));
+        GFX_DrawText(&txtNoWifi, (screenW - textW)/2, (screenH - textH)/2, 0, 0.5f, 0.5f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(255, 0, 0, 255));
         return; 
     }
 
     if (currentState == STATE_CERT_ERROR) {
         float textW = 0, textH = 0;
         GFX_TextGetDimensions(&txtCertError, 0.5f, 0.5f, &textW, &textH);
-        GFX_DrawText(&txtCertError, (screenW - textW)/2, (screenH - textH)/2, 0, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(255, 0, 0, 255));
+        GFX_DrawText(&txtCertError, (screenW - textW)/2, (screenH - textH)/2, 0, 0.5f, 0.5f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(255, 0, 0, 255));
         return;
     }
 
@@ -395,14 +395,14 @@ void sceneInitRender(void) {
     if (currentState == STATE_ATTEMPT_NTP || currentState == STATE_WAIT_NTP) {
         float textW = 0, textH = 0;
         GFX_TextGetDimensions(&txtNtpFixing, 0.5f, 0.5f, &textW, &textH);
-        GFX_DrawText(&txtNtpFixing, (screenW - textW)/2, (screenH - textH)/2, 0, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(255, 255, 0, 255));
+        GFX_DrawText(&txtNtpFixing, (screenW - textW)/2, (screenH - textH)/2, 0, 0.5f, 0.5f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(255, 255, 0, 255));
         return;
     }
 
     if (currentState >= STATE_ANIM_IN && currentState <= STATE_ANIM_OUT) {
         float alphaFactor = (currentState == STATE_ANIM_OUT) ? animFactor : (animTimer > 1.0f ? 1.0f : animTimer); 
         u8 dimAlpha = (u8)(150.0f * alphaFactor);
-        GFX_DrawRectSolid(0, 0, 0.5f, screenW, screenH, C2D_Color32(0, 0, 0, dimAlpha));
+        GFX_DrawRectSolid(0, 0, 0.5f, screenW, screenH, GFX_COLOR_RGBA(0, 0, 0, dimAlpha));
         
         float finalBoxW = 320.0f;
         float finalBoxH = 180.0f;
@@ -413,9 +413,9 @@ void sceneInitRender(void) {
         float curX = (screenW - curW) / 2.0f;
         float curY = (screenH - curH) / 2.0f;
         
-        u32 clrBorder = C2D_Color32(255, 255, 255, 255); 
-        u32 clrBgTop = C2D_Color32(45, 45, 20, 255); 
-        u32 clrBgBot = C2D_Color32(5, 5, 5, 255);    
+        u32 clrBorder = GFX_COLOR_RGBA(255, 255, 255, 255); 
+        u32 clrBgTop = GFX_COLOR_RGBA(45, 45, 20, 255); 
+        u32 clrBgBot = GFX_COLOR_RGBA(5, 5, 5, 255);    
         
         float cornerRadius = 5.0f * animFactor; 
         float borderThickness = 3.0f;
@@ -440,7 +440,7 @@ void sceneInitRender(void) {
         if (curTextScale > 0.01f) {
             float wT, hT;
             GFX_TextGetDimensions(&txtTitle, curTextScale, curTextScale, &wT, &hT);
-            u32 clrTitle = C2D_Color32(255, 235, 59, 255);
+            u32 clrTitle = GFX_COLOR_RGBA(255, 235, 59, 255);
 
             GFX_DrawText(&txtTitle, 
                 (screenW - wT)/2.0f, 
@@ -450,7 +450,7 @@ void sceneInitRender(void) {
             float optScale = 0.6f * animFactor;
             float startY = curY + (60.0f * animFactor);
             float gapY = 28.0f * animFactor;
-            u32 clrText = C2D_Color32(255, 255, 255, 255);
+            u32 clrText = GFX_COLOR_RGBA(255, 255, 255, 255);
 
             float wX, hX;
             GFX_TextGetDimensions(&txtOptX, optScale, optScale, &wX, &hX);
@@ -469,8 +469,8 @@ void sceneInitRender(void) {
             GFX_DrawText(&txtOptB, (screenW - wB)/2, startY + gapY*3, 0.7f, optScale, optScale, GFX_ALIGN_LEFT, clrText);
         }
     }
-    C2D_SceneBegin(bottom);
-    C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255));
+    GFX_BeginSceneBottom();
+    
     if (random_val == 213) {
         GFX_DrawImageAt(sie_do_wiezienia, 0.0f, 0.0f, 0.5f, NULL, 1.0f, 1.0f);
     }

@@ -22,4 +22,11 @@ void GFX_DrawShadowedTextWrapped(const GFX_TEXT* text, float x, float y, float d
 
 void GFX_DrawRectSolid(float x, float y, float depth, int w, int h, u32 color);
 void GFX_InitGfx();
+
+// 0 - left
+// 1 - right
+void GFX_BeginSceneTop(int side, bool should_clear);
+
+// stricte 3ds only 
+void GFX_BeginSceneBottom();
 #endif

@@ -138,9 +138,8 @@ void sceneIntroUpdate(uint32_t kDown, uint32_t kHeld) {
 }
 
 void sceneIntroRender(void) {
-    C2D_SceneBegin(left);
-    C2D_TargetClear(left, C2D_Color32(0, 0, 0, 255));
-    C2D_TargetClear(right, C2D_Color32(0, 0, 0, 255));
+    GFX_BeginSceneTop(0, true);
+
     float scale;
 
     if (!animationDone) {
@@ -172,7 +171,7 @@ void sceneIntroRender(void) {
         scale, scale
     );
 
-    C2D_SceneBegin(right);
+    GFX_BeginSceneTop(1, true);
     if (slider != 0.0) {
         GFX_DrawImageAt(
             fridge_image,
@@ -183,7 +182,7 @@ void sceneIntroRender(void) {
         );        
     }
 
-    C2D_SceneBegin(left);
+    GFX_BeginSceneTop(0, false);
     if (textAnimationStarted) {
 		float bounceScale = 1.0f;
 
@@ -200,39 +199,39 @@ void sceneIntroRender(void) {
 
         float drawX = textX - (textWidth * bounceScale) / 2.0f;
 
-        GFX_DrawText(&text, drawX - (3 * slider), 20.0f, 1.0f, bounceScale, bounceScale, GFX_ALIGN_LEFT, C2D_Color32(235, 0, 146, 255));
+        GFX_DrawText(&text, drawX - (3 * slider), 20.0f, 1.0f, bounceScale, bounceScale, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(235, 0, 146, 255));
 
         if (slider != 0.0) {
-            C2D_SceneBegin(right);
-            GFX_DrawText(&text, drawX + (3 * slider), 20.0f, 1.0f, bounceScale, bounceScale, GFX_ALIGN_LEFT, C2D_Color32(235, 0, 146, 255));
-            C2D_SceneBegin(left);
+            GFX_BeginSceneTop(1, false);
+            GFX_DrawText(&text, drawX + (3 * slider), 20.0f, 1.0f, bounceScale, bounceScale, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(235, 0, 146, 255));
+            GFX_BeginSceneTop(0, false);
         }
     }
 
     if (flashTimer > 0.0f) {
         float alpha = (flashTimer / FLASH_DURATION) * 255.0f;
-        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, (uint8_t)alpha));
+        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, GFX_COLOR_RGBA(255, 255, 255, (uint8_t)alpha));
         if (slider != 0.0f) {
-            C2D_SceneBegin(right);
-            GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, (uint8_t)alpha));
-            C2D_SceneBegin(left);
+            GFX_BeginSceneTop(1, false);
+            GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, GFX_COLOR_RGBA(255, 255, 255, (uint8_t)alpha));
+            GFX_BeginSceneTop(0, false);
         }
     }
     if (fadeStarted) {
         float alpha = (fadeTimer / FADE_DURATION) * 255.0f;
-        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(0, 0, 0, (uint8_t)alpha));
+        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, GFX_COLOR_RGBA(0, 0, 0, (uint8_t)alpha));
         if (slider != 0.0f) {
-            C2D_SceneBegin(right);
-            GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(0, 0, 0, (uint8_t)alpha));
-            C2D_SceneBegin(left);
+            GFX_BeginSceneTop(1, false);
+            GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, GFX_COLOR_RGBA(0, 0, 0, (uint8_t)alpha));
+            GFX_BeginSceneTop(0, false);
         }
     }
 
-    C2D_SceneBegin(bottom);
-    C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255));
+    GFX_BeginSceneBottom();
+    
     if (flashTimer > 0.0f) {
         float alpha = (flashTimer / FLASH_DURATION) * 255.0f;
-        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, (uint8_t)alpha));
+        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, GFX_COLOR_RGBA(255, 255, 255, (uint8_t)alpha));
     }
 }
 

@@ -124,15 +124,15 @@ void sceneDebugUpdate(uint32_t kDown, uint32_t kHeld) {
 }
 
 void sceneDebugRender(void) {
-    C2D_SceneBegin(left);
-    C2D_TargetClear(left, C2D_Color32(0, 0, 0, 255));
+    GFX_BeginSceneTop(0, true);
+    
 
     
     GFX_DrawShadowedText(
         &debugmenu_Text[0],
         200.0f, 20.0f, 1.0f, 1.0f, 1.0f, GFX_ALIGN_CENTER,
-        C2D_Color32(0xB1, 0xA2, 0x2F, 0xff),
-        C2D_Color32(0xff, 0xff, 0xff, 0xff)
+        GFX_COLOR_RGBA(0xB1, 0xA2, 0x2F, 0xff),
+        GFX_COLOR_RGBA(0xff, 0xff, 0xff, 0xff)
     );
 
     
@@ -145,13 +145,13 @@ void sceneDebugRender(void) {
                 &debugmenu_Text[10],
                 15.0f, y,
                 0.5f, 0.5f, 0.5f, GFX_ALIGN_LEFT,
-                C2D_Color32(255, 255, 255, 255)
+                GFX_COLOR_RGBA(255, 255, 255, 255)
             );
         }
 
         u32 color = (i == debugMenuSelected)
-            ? C2D_Color32(255, 255, 0, 255)
-            : C2D_Color32(200, 200, 200, 255);
+            ? GFX_COLOR_RGBA(255, 255, 0, 255)
+            : GFX_COLOR_RGBA(200, 200, 200, 255);
 
         GFX_DrawText(
             &debugmenu_Text[i + 1],
@@ -161,22 +161,22 @@ void sceneDebugRender(void) {
         );
     }
 
-    C2D_SceneBegin(bottom);
-    C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255));
+    GFX_BeginSceneBottom();
+    
     
     if (paczkashow) {
         
         if (paczka_count > 0) {
             float y = 15.0f;
             for(int k=11; k<=14; k++) {
-                GFX_DrawText(&debugmenu_Text[k], 15.0f, y, 0.5f, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(255, 255, 255, 255));
+                GFX_DrawText(&debugmenu_Text[k], 15.0f, y, 0.5f, 0.5f, 0.5f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(255, 255, 255, 255));
                 y += 15.0f;
             }
         }
         if (paczka_count > 1) {
             float y = 90.0f;
             for(int k=15; k<=18; k++) {
-                GFX_DrawText(&debugmenu_Text[k], 15.0f, y, 0.5f, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(255, 255, 255, 255));
+                GFX_DrawText(&debugmenu_Text[k], 15.0f, y, 0.5f, 0.5f, 0.5f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(255, 255, 255, 255));
                 y += 15.0f;
             }
         }

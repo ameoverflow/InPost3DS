@@ -68,3 +68,26 @@ void GFX_InitGfx(){
     right = C2D_CreateScreenTarget(GFX_TOP, GFX_RIGHT);
     bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
 }
+
+
+void GFX_BeginSceneTop(int side, bool should_clear){
+    switch(side){
+        case 0:
+            C2D_SceneBegin(left);
+            if (should_clear) {
+                C2D_TargetClear(left, C2D_Color32(0, 0, 0, 255));
+            }
+            break;
+        case 1:
+            C2D_SceneBegin(right);
+            if (should_clear) {
+                C2D_TargetClear(right, C2D_Color32(0, 0, 0, 255));
+            }
+            break;
+    }
+}
+
+void GFX_BeginSceneBottom(){
+    C2D_SceneBegin(bottom);
+    C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255));
+}

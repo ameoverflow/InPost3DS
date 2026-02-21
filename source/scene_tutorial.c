@@ -370,19 +370,19 @@ void drawTutorialTop(float offset) {
     
     float currentBoxY = startBoxY - ((startBoxY - targetBoxY) * dialogEase);
     
-    u32 colorTop = C2D_Color32(0, 0, 0, 220);
-    u32 colorBot = C2D_Color32(50, 50, 80, 240);
+    u32 colorTop = GFX_COLOR_RGBA(0, 0, 0, 220);
+    u32 colorBot = GFX_COLOR_RGBA(50, 50, 80, 240);
     
     float uiOffset = offset * 0.5f; 
     
     C2D_DrawRectangle(-20 + uiOffset, currentBoxY, 0.8f, 450.0f, boxH, colorTop, colorTop, colorBot, colorBot);
-    GFX_DrawRectSolid(-20 + uiOffset, currentBoxY, 0.85f, 450.0f, 2.0f, C2D_Color32(255, 204, 0, 255));
+    GFX_DrawRectSolid(-20 + uiOffset, currentBoxY, 0.85f, 450.0f, 2.0f, GFX_COLOR_RGBA(255, 204, 0, 255));
 
     float textX = 160.0f; 
     float textY = currentBoxY + 15.0f;
     
     if (currentBoxY < 240.0f) {
-        GFX_DrawText(&currentTextObj, textX + uiOffset, textY, 0.9f, 0.4f, 0.4f, GFX_ALIGN_LEFT, C2D_Color32(255, 255, 255, 255));
+        GFX_DrawText(&currentTextObj, textX + uiOffset, textY, 0.9f, 0.4f, 0.4f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(255, 255, 255, 255));
     }
 
     if (charBaseX + charW > -200.0f) {
@@ -463,24 +463,24 @@ void drawTutorialTop(float offset) {
     }
     if (flashTimer < FLASH_DURATION) {
         float alpha = 1.0f - (flashTimer / FLASH_DURATION);
-        u32 white = C2D_Color32(255, 255, 255, (u8)(255 * alpha));
+        u32 white = GFX_COLOR_RGBA(255, 255, 255, (u8)(255 * alpha));
         GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, white);
     }
 }
 
 void sceneTutorialRender(void) {
-    C2D_SceneBegin(left);
-    C2D_TargetClear(left, C2D_Color32(0, 0, 0, 255)); 
+    GFX_BeginSceneTop(0, true);
+     
     drawTutorialTop(0.0f);
 
     if (slider > 0.0f) {
-        C2D_SceneBegin(right);
-        C2D_TargetClear(right, C2D_Color32(0, 0, 0, 255));
+        GFX_BeginSceneTop(1, true);
+        
         drawTutorialTop(slider * 5.0f);
     }
 
-    C2D_SceneBegin(bottom);
-    C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255));
+    GFX_BeginSceneBottom();
+    
 
     GFX_DrawImageAt(bg_bottom, tut_bg_x, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
     if (VOICEACT != 3) {
@@ -525,11 +525,11 @@ void sceneTutorialRender(void) {
     GFX_TextGetDimensions(&promptText, 0.6f, 0.6f, &w, &h);
     
     u8 pulse = (u8)(155 + 100 * fabs(sinf(osGetTime() / 500.0f)));
-    GFX_DrawText(&promptText, 160.0f - (w/2), 200.0f, 0.5f, 0.6f, 0.6f, GFX_ALIGN_LEFT, C2D_Color32(0, 0, 0, pulse));
+    GFX_DrawText(&promptText, 160.0f - (w/2), 200.0f, 0.5f, 0.6f, 0.6f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(0, 0, 0, pulse));
     
     if (flashTimer < FLASH_DURATION) {
         float alpha = 1.0f - (flashTimer / FLASH_DURATION);
-        u32 white = C2D_Color32(255, 255, 255, (u8)(255 * alpha));
+        u32 white = GFX_COLOR_RGBA(255, 255, 255, (u8)(255 * alpha));
         GFX_DrawRectSolid(0, 0, 1.0f, 320, 240, white);
     }
 }

@@ -147,8 +147,8 @@ void drawNoPaczkasOverlay(GFX_TEXT* textObj, float x, float y) {
             0.6f,
             0.7f,
             0.7f, GFX_ALIGN_CENTER,
-            C2D_Color32(0xB1, 0xA2, 0x2F, 0xff),
-            C2D_Color32(0xff, 0xff, 0xff, 0xff)
+            GFX_COLOR_RGBA(0xB1, 0xA2, 0x2F, 0xff),
+            GFX_COLOR_RGBA(0xff, 0xff, 0xff, 0xff)
         );
     }
 }
@@ -278,8 +278,8 @@ void sceneHomeMenuInit(void) {
     how_much_in_flash2 = 1.0f;
     FADE_DURATION2 = 0.6f;
     flashActive2 = true;
-    C2D_PlainImageTint(&dotTint, C2D_Color32(255, 255, 255, 255), 1.0f);
-    C2D_PlainImageTint(&shadowTint, C2D_Color32(0, 0, 0, 80), 1.0f);
+    C2D_PlainImageTint(&dotTint, GFX_COLOR_RGBA(255, 255, 255, 255), 1.0f);
+    C2D_PlainImageTint(&shadowTint, GFX_COLOR_RGBA(0, 0, 0, 80), 1.0f);
     tryToGetPaczkas = false;
     tryToGetPersonalData = false;
     paczkasparsed = false;
@@ -728,9 +728,9 @@ void drawSpinner(float cx, float cy, float alphaVal) {
         float y = cy + bigRadius * sinf(angleRad);
         float dotAlpha = (0.3f + 0.7f * (float)i / SPINNER_DOT_COUNT) * alphaVal;
         u8 a = (u8)(dotAlpha * 255);
-        u32 shadowColor = C2D_Color32(0, 0, 0, a / 2);
+        u32 shadowColor = GFX_COLOR_RGBA(0, 0, 0, a / 2);
         C2D_DrawRectangle(x - dotSize / 2.0f + shadowOffset, y - dotSize / 2.0f + shadowOffset, 0.98f, dotSize, dotSize, shadowColor, shadowColor, shadowColor, shadowColor);
-        u32 dotColor = C2D_Color32(255, 255, 255, a);
+        u32 dotColor = GFX_COLOR_RGBA(255, 255, 255, a);
         C2D_DrawRectangle(x - dotSize / 2.0f, y - dotSize / 2.0f, 0.99f, dotSize, dotSize, dotColor, dotColor, dotColor, dotColor);
     }
 }
@@ -756,7 +756,7 @@ void drawHomeSceneContent(float offset, float transT, float finalZY) {
 
             u8 textAlpha = (u8)(255.0f * (1.0f - (transT * 1.2f)));
             if (textAlpha > 0) {
-                u32 textColor = C2D_Color32(0, 0, 0, textAlpha);
+                u32 textColor = GFX_COLOR_RGBA(0, 0, 0, textAlpha);
 
                 float wD, hD;
                 GFX_TextGetDimensions(&text_status, scaleStatus, scaleStatus, &wD, &hD);
@@ -812,7 +812,7 @@ void drawHomeSceneContent(float offset, float transT, float finalZY) {
                 C2D_ImageTint imgT;
                 C2D_AlphaImageTint(&imgT, historyAlphaVal);
                 C2D_ImageTint shadowT;
-                C2D_PlainImageTint(&shadowT, C2D_Color32(0, 0, 0, (u8)(100 * historyAlphaVal)), 1.0f);
+                C2D_PlainImageTint(&shadowT, GFX_COLOR_RGBA(0, 0, 0, (u8)(100 * historyAlphaVal)), 1.0f);
                 C2D_DrawImageAt(kuponkurwa, drawX + 3.0f + offset, drawY + 3.0f, 0.7f, &shadowT, finalScale, finalScale);
                 C2D_DrawImageAt(kuponkurwa, drawX + offset, drawY, 0.71f, &imgT, finalScale, finalScale);
             } else {
@@ -827,8 +827,8 @@ void drawHomeSceneContent(float offset, float transT, float finalZY) {
                     0.7f,
                     1.0f,
                     1.0f, GFX_ALIGN_CENTER,
-                    C2D_Color32(255,255,255,(u8)(255 * historyAlphaVal)),
-                    C2D_Color32(0,0,0,(u8)(120 * historyAlphaVal))
+                    GFX_COLOR_RGBA(255,255,255,(u8)(255 * historyAlphaVal)),
+                    GFX_COLOR_RGBA(0,0,0,(u8)(120 * historyAlphaVal))
                 );
             }
         }
@@ -840,7 +840,7 @@ void drawHomeSceneContent(float offset, float transT, float finalZY) {
         if (pT > 1.0f) pT = 1.0f;
         float alphaFactor = pT;
         u8 dimAlpha = (u8)(150.0f * alphaFactor);
-        GFX_DrawRectSolid(0, 0, 0.96f, 400, 240, C2D_Color32(0, 0, 0, dimAlpha));
+        GFX_DrawRectSolid(0, 0, 0.96f, 400, 240, GFX_COLOR_RGBA(0, 0, 0, dimAlpha));
     }
 
 
@@ -849,7 +849,7 @@ void drawHomeSceneContent(float offset, float transT, float finalZY) {
         if (fadeProgress > 1.0f) fadeProgress = 1.0f;
         float fadeValue = 1.0f - fadeProgress;
         uint8_t alpha = (uint8_t)(fadeValue * 255.0f);
-        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, alpha));
+        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, GFX_COLOR_RGBA(255, 255, 255, alpha));
     }
 }
 void drawFancyButton(float x, float y, float w, float h, const char* text, bool isPressed, float alpha) {
@@ -871,15 +871,15 @@ void drawFancyButton(float x, float y, float w, float h, const char* text, bool 
 
 
     if (!isPressed) {
-        GFX_DrawRectSolid(finalX + 2.0f, finalY + 2.0f, 0.9f, scaledW, scaledH, C2D_Color32(0, 0, 0, shadowA));
+        GFX_DrawRectSolid(finalX + 2.0f, finalY + 2.0f, 0.9f, scaledW, scaledH, GFX_COLOR_RGBA(0, 0, 0, shadowA));
     }
 
 
-    u32 borderColor = C2D_Color32(255, 204, 0, a);
+    u32 borderColor = GFX_COLOR_RGBA(255, 204, 0, a);
     GFX_DrawRectSolid(finalX - 1.0f, finalY - 1.0f, 0.9f, scaledW + 2.0f, scaledH + 2.0f, borderColor);
 
 
-    u32 bgColor = isPressed ? C2D_Color32(234, 234, 234, a) : C2D_Color32(254, 254, 254, a);
+    u32 bgColor = isPressed ? GFX_COLOR_RGBA(234, 234, 234, a) : GFX_COLOR_RGBA(254, 254, 254, a);
     GFX_DrawRectSolid(finalX, finalY, 0.9f, scaledW, scaledH, bgColor);
 
 
@@ -891,7 +891,7 @@ void drawFancyButton(float x, float y, float w, float h, const char* text, bool 
 
     float txtW, txtH;
     GFX_TextGetDimensions(&btnTxt, 0.5f, 0.5f, &txtW, &txtH);
-    u32 txtColor = C2D_Color32(205, 154, 0, a);
+    u32 txtColor = GFX_COLOR_RGBA(205, 154, 0, a);
 
     GFX_DrawText(&btnTxt, centerX - (txtW / 2.0f), centerY - (txtH / 2.0f), 0.95f, 0.5f, 0.5f, GFX_ALIGN_LEFT, txtColor);
 }
@@ -926,19 +926,19 @@ void sceneHomeMenuRender(void) {
     float finalZY = currentZY + flyUpOffset;
 
 
-    C2D_SceneBegin(left);
-    C2D_TargetClear(left, C2D_Color32(0, 0, 0, 255));
+    GFX_BeginSceneTop(0, true);
+    
     drawHomeSceneContent(0.0f, transT, finalZY);
 
     if (slider > 0.0f) {
-        C2D_SceneBegin(right);
-        C2D_TargetClear(right, C2D_Color32(0, 0, 0, 255));
+        GFX_BeginSceneTop(1, true);
+        
         drawHomeSceneContent(slider * 5.0f, transT, finalZY);
     }
 
 
-    C2D_SceneBegin(bottom);
-    C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255));
+    GFX_BeginSceneBottom();
+    
     GFX_DrawImageAt(bg_bottom, bg_x2, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
 
     if (!paczkas.done) {
@@ -1005,7 +1005,7 @@ void sceneHomeMenuRender(void) {
                     C2D_ImageTint pkgTint;
                     C2D_AlphaImageTint(&pkgTint, alpha);
                     C2D_ImageTint shdwTint;
-                    C2D_PlainImageTint(&shdwTint, C2D_Color32(0, 0, 0, (u8)(alpha * 80.0f)), 1.0f);
+                    C2D_PlainImageTint(&shdwTint, GFX_COLOR_RGBA(0, 0, 0, (u8)(alpha * 80.0f)), 1.0f);
 
                     GFX_DrawImageAt(paczka_closed, drawX + 5.0f, currentY + 5.0f, 0.5f, &shdwTint, 1.0f, 1.0f);
                     GFX_DrawImageAt(paczka_closed, drawX, currentY, 0.5f, &pkgTint, 1.0f, 1.0f);
@@ -1030,8 +1030,8 @@ void sceneHomeMenuRender(void) {
             float currentQrY = qrStartY - ((qrStartY - qrTargetY) * detailsEnterEase);
 
             u8 qrAlpha = (u8)(255.0f * detailsEnterEase);
-            u32 qrTintVal = C2D_Color32(255, 255, 255, qrAlpha);
-            u32 qrTintVal2 = C2D_Color32(0, 0, 0, 120);
+            u32 qrTintVal = GFX_COLOR_RGBA(255, 255, 255, qrAlpha);
+            u32 qrTintVal2 = GFX_COLOR_RGBA(0, 0, 0, 120);
 
             float cardSize = 138.0f;
             float cardX = 160.0f - (cardSize / 2.0f);
@@ -1056,7 +1056,7 @@ void sceneHomeMenuRender(void) {
 
                 u8 shadowAlpha = (u8)(100.0f * detailsEnterEase);
                 C2D_ImageTint shadowTint;
-                C2D_PlainImageTint(&shadowTint, C2D_Color32(0, 0, 0, shadowAlpha), 1.0f);
+                C2D_PlainImageTint(&shadowTint, GFX_COLOR_RGBA(0, 0, 0, shadowAlpha), 1.0f);
                 GFX_DrawImageAt(otworz_zdalnie_button, drawX + 4.0f, drawY + 4.0f, 0.89f, &shadowTint, 1.0f, 1.0f);
                 C2D_ImageTint btnTint;
                 C2D_AlphaImageTint(&btnTint, detailsEnterEase);
@@ -1066,12 +1066,12 @@ void sceneHomeMenuRender(void) {
         } else {
             u8 listAlpha = (u8)(255.0f * detailsEnterEase);
             float scrollBaseY = detailsYOffset + eventListScroll;
-            u32 gradTop = C2D_Color32(255, 255, 255, listAlpha);
-            u32 gradBot = C2D_Color32(255, 255, 140, listAlpha);
+            u32 gradTop = GFX_COLOR_RGBA(255, 255, 255, listAlpha);
+            u32 gradBot = GFX_COLOR_RGBA(255, 255, 140, listAlpha);
             C2D_DrawRectangle(0, detailsYOffset, 0.6f, 320, 240, gradTop, gradTop, gradBot, gradBot);
 
-            u32 dateColor = C2D_Color32(100, 100, 100, listAlpha);
-            u32 nameColor = C2D_Color32(0, 0, 0, listAlpha);
+            u32 dateColor = GFX_COLOR_RGBA(100, 100, 100, listAlpha);
+            u32 nameColor = GFX_COLOR_RGBA(0, 0, 0, listAlpha);
 
             GFX_TextBufClear(eventListBuf);
 
@@ -1084,17 +1084,17 @@ void sceneHomeMenuRender(void) {
                     fade = fmaxf(0.0f, 1.0f - (detailsYOffset - scrollBaseY) / 40.0f);
                 }
                 u8 codeAlpha = (u8)(listAlpha * fade);
-                GFX_DrawRectSolid(0.0f, scrollBaseY, 0.61f, 320.0f, 50.0f, C2D_Color32(255, 255, 255, (u8)(180 * fade)));
+                GFX_DrawRectSolid(0.0f, scrollBaseY, 0.61f, 320.0f, 50.0f, GFX_COLOR_RGBA(255, 255, 255, (u8)(180 * fade)));
 
                 GFX_TEXT labelTxt, codeTxt;
                 GFX_TextParse(&labelTxt, eventListBuf, "Kod Odbioru:");
                 GFX_TextOptimize(&labelTxt);
-                GFX_DrawText(&labelTxt, 15.0f, scrollBaseY + 12.0f, 0.7f, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(100, 100, 100, codeAlpha));
+                GFX_DrawText(&labelTxt, 15.0f, scrollBaseY + 12.0f, 0.7f, 0.5f, 0.5f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(100, 100, 100, codeAlpha));
 
                 GFX_TextParse(&codeTxt, eventListBuf, p->opencode);
                 GFX_TextOptimize(&codeTxt);
-                GFX_DrawText(&codeTxt, 15.0f, scrollBaseY + 30.0f, 0.7f, 0.7f, 0.7f, GFX_ALIGN_LEFT, C2D_Color32(0, 0, 0, codeAlpha));
-                GFX_DrawRectSolid(10.0f, scrollBaseY + 55.0f, 0.7f, 300.0f, 2.0f, C2D_Color32(255, 204, 0, codeAlpha));
+                GFX_DrawText(&codeTxt, 15.0f, scrollBaseY + 30.0f, 0.7f, 0.7f, 0.7f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(0, 0, 0, codeAlpha));
+                GFX_DrawRectSolid(10.0f, scrollBaseY + 55.0f, 0.7f, 300.0f, 2.0f, GFX_COLOR_RGBA(255, 204, 0, codeAlpha));
             }
 
             float listY = scrollBaseY + listStartOffset;
@@ -1120,17 +1120,17 @@ void sceneHomeMenuRender(void) {
                 GFX_TextOptimize(&nameTxt);
                 GFX_DrawText(&nameTxt, 10.0f, itemY + 15.0f, 0.7f, 0.5f, 0.5f, GFX_ALIGN_LEFT, nameColor);
 
-                GFX_DrawRectSolid(10.0f, itemY + 40.0f, 0.7f, 300.0f, 1.0f, C2D_Color32(200, 200, 200, listAlpha));
+                GFX_DrawRectSolid(10.0f, itemY + 40.0f, 0.7f, 300.0f, 1.0f, GFX_COLOR_RGBA(200, 200, 200, listAlpha));
             }
 
             if (!p->courier_paczka && p->paczka_openable) {
                 float btnX = 270.0f;
                 float btnY = detailsYOffset + 10.0f;
-                GFX_DrawRectSolid(btnX, btnY, 0.8f, 40.0f, 40.0f, C2D_Color32(0xFF, 0xAA, 0x00, listAlpha));
+                GFX_DrawRectSolid(btnX, btnY, 0.8f, 40.0f, 40.0f, GFX_COLOR_RGBA(0xFF, 0xAA, 0x00, listAlpha));
                 GFX_TEXT qrTxt;
                 GFX_TextParse(&qrTxt, eventListBuf, "QR");
                 GFX_TextOptimize(&qrTxt);
-                GFX_DrawText(&qrTxt, btnX + 8.0f, btnY + 10.0f, 0.9f, 0.6f, 0.6f, GFX_ALIGN_LEFT, C2D_Color32(255, 255, 255, listAlpha));
+                GFX_DrawText(&qrTxt, btnX + 8.0f, btnY + 10.0f, 0.9f, 0.6f, 0.6f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(255, 255, 255, listAlpha));
             }
         }
     }
@@ -1142,7 +1142,7 @@ void sceneHomeMenuRender(void) {
         float alphaFactor = pT;
 
         u8 dimAlpha = (u8)(150.0f * alphaFactor);
-        GFX_DrawRectSolid(0, 0, 0.96f, 320, 240, C2D_Color32(0, 0, 0, dimAlpha));
+        GFX_DrawRectSolid(0, 0, 0.96f, 320, 240, GFX_COLOR_RGBA(0, 0, 0, dimAlpha));
         
         float mwW = 260.0f;
         float mwH = 100.0f;
@@ -1153,7 +1153,7 @@ void sceneHomeMenuRender(void) {
         float curY = (240.0f - curH) / 2.0f;
 
         u8 bgAlpha = (u8)(255.0f * alphaFactor);
-        GFX_DrawRectSolid(curX, curY, 0.97f, curW, curH, C2D_Color32(255, 255, 255, bgAlpha));
+        GFX_DrawRectSolid(curX, curY, 0.97f, curW, curH, GFX_COLOR_RGBA(255, 255, 255, bgAlpha));
         
         GFX_TEXT qText, optText;
         GFX_TextBufClear(eventListBuf); 
@@ -1175,14 +1175,14 @@ void sceneHomeMenuRender(void) {
         GFX_TextGetDimensions(&qText, tScale, tScale, &wQ, &hQ);
         GFX_TextGetDimensions(&optText, tScale, tScale, &wO, &hO);
         
-        u32 txtColor = C2D_Color32(0, 0, 0, bgAlpha);
+        u32 txtColor = GFX_COLOR_RGBA(0, 0, 0, bgAlpha);
         GFX_DrawText(&qText, 160.0f - (wQ/2), curY + (20.0f * ease), 0.98f, tScale, tScale, GFX_ALIGN_LEFT, txtColor);
         GFX_DrawText(&optText, 160.0f - (wO/2), curY + (60.0f * ease), 0.98f, tScale, tScale, GFX_ALIGN_LEFT, txtColor);
     }
 
     if (inSettingsMode) {
         
-        GFX_DrawRectSolid(0, 0, 0.99f, 320, 240, C2D_Color32(0, 0, 0, 180));
+        GFX_DrawRectSolid(0, 0, 0.99f, 320, 240, GFX_COLOR_RGBA(0, 0, 0, 180));
         
 
         float mwW = 280.0f;
@@ -1190,14 +1190,14 @@ void sceneHomeMenuRender(void) {
         float curX = (320.0f - mwW) / 2.0f;
         float curY = (240.0f - mwH) / 2.0f; 
         
-        GFX_DrawRectSolid(curX, curY, 0.995f, mwW, mwH, C2D_Color32(255, 255, 255, 255));
+        GFX_DrawRectSolid(curX, curY, 0.995f, mwW, mwH, GFX_COLOR_RGBA(255, 255, 255, 255));
         
         
         GFX_TextBufClear(eventListBuf);
         GFX_TEXT titleTxt, valTxt, okTxt, restartMsg, tutTxt, dpadTxt; 
         GFX_TextParse(&titleTxt, eventListBuf, "Ustawienia");
         GFX_TextOptimize(&titleTxt);
-        GFX_DrawText(&titleTxt, 160.0f - 40.0f, curY + 15.0f, 1.0f, 0.7f, 0.7f, GFX_ALIGN_LEFT, C2D_Color32(0,0,0,255));
+        GFX_DrawText(&titleTxt, 160.0f - 40.0f, curY + 15.0f, 1.0f, 0.7f, 0.7f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(0,0,0,255));
 
         
         char vaBuf[64];
@@ -1224,32 +1224,32 @@ void sceneHomeMenuRender(void) {
         
         float wV, hV;
         GFX_TextGetDimensions(&valTxt, 0.8f, 0.8f, &wV, &hV);
-        GFX_DrawText(&valTxt, 160.0f - (wV/2.0f), curY + 45.0f, 1.0f, 0.8f, 0.8f, GFX_ALIGN_LEFT, C2D_Color32(50,50,50,255));
+        GFX_DrawText(&valTxt, 160.0f - (wV/2.0f), curY + 45.0f, 1.0f, 0.8f, 0.8f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(50,50,50,255));
 
         GFX_TextParse(&dpadTxt, eventListBuf, "(D-Pad)");
         GFX_TextOptimize(&dpadTxt);
         float wD, hD;
         GFX_TextGetDimensions(&dpadTxt, 0.5f, 0.5f, &wD, &hD);
-        GFX_DrawText(&dpadTxt, 160.0f - (wD/2.0f), curY + 70.0f, 1.0f, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(100,100,100,255));
+        GFX_DrawText(&dpadTxt, 160.0f - (wD/2.0f), curY + 70.0f, 1.0f, 0.5f, 0.5f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(100,100,100,255));
 
 
         float tutBtnY = curY + 100.0f;
         bool voiceChanged = (VOICEACT != initialVoiceAct);
 
         if (voiceChanged) {
-            GFX_DrawRectSolid(160.0f - 70.0f, tutBtnY, 1.0f, 140.0f, 30.0f, C2D_Color32(150, 150, 150, 255));
+            GFX_DrawRectSolid(160.0f - 70.0f, tutBtnY, 1.0f, 140.0f, 30.0f, GFX_COLOR_RGBA(150, 150, 150, 255));
             GFX_TextParse(&tutTxt, eventListBuf, "Samouczek");
             GFX_TextOptimize(&tutTxt);
             float wT, hT;
             GFX_TextGetDimensions(&tutTxt, 0.6f, 0.6f, &wT, &hT);
-            GFX_DrawText(&tutTxt, 160.0f - (wT/2.0f), tutBtnY + 5.0f, 1.0f, 0.6f, 0.6f, GFX_ALIGN_LEFT, C2D_Color32(100,100,100,255));
+            GFX_DrawText(&tutTxt, 160.0f - (wT/2.0f), tutBtnY + 5.0f, 1.0f, 0.6f, 0.6f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(100,100,100,255));
         } else {
-            GFX_DrawRectSolid(160.0f - 70.0f, tutBtnY, 1.0f, 140.0f, 30.0f, C2D_Color32(200, 200, 200, 255));
+            GFX_DrawRectSolid(160.0f - 70.0f, tutBtnY, 1.0f, 140.0f, 30.0f, GFX_COLOR_RGBA(200, 200, 200, 255));
             GFX_TextParse(&tutTxt, eventListBuf, "Samouczek");
             GFX_TextOptimize(&tutTxt);
             float wT, hT;
             GFX_TextGetDimensions(&tutTxt, 0.6f, 0.6f, &wT, &hT);
-            GFX_DrawText(&tutTxt, 160.0f - (wT/2.0f), tutBtnY + 5.0f, 1.0f, 0.6f, 0.6f, GFX_ALIGN_LEFT, C2D_Color32(0,0,0,255));
+            GFX_DrawText(&tutTxt, 160.0f - (wT/2.0f), tutBtnY + 5.0f, 1.0f, 0.6f, 0.6f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(0,0,0,255));
         }
 
         GFX_TextParse(&restartMsg, eventListBuf, "(Zapisanie zmian spowoduje restart)");
@@ -1257,25 +1257,25 @@ void sceneHomeMenuRender(void) {
         float wM, hM;
         GFX_TextGetDimensions(&restartMsg, 0.5f, 0.5f, &wM, &hM);
         
-        GFX_DrawText(&restartMsg, 160.0f - (wM/2.0f), curY + 145.0f, 1.0f, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(200,0,0,255));
+        GFX_DrawText(&restartMsg, 160.0f - (wM/2.0f), curY + 145.0f, 1.0f, 0.5f, 0.5f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(200,0,0,255));
         
 
         float okBtnY = curY + 170.0f;
-        GFX_DrawRectSolid(160.0f - 50.0f, okBtnY, 1.0f, 100.0f, 30.0f, C2D_Color32(0, 150, 0, 255));
+        GFX_DrawRectSolid(160.0f - 50.0f, okBtnY, 1.0f, 100.0f, 30.0f, GFX_COLOR_RGBA(0, 150, 0, 255));
         GFX_TextParse(&okTxt, eventListBuf, "OK (A)");
         GFX_TextOptimize(&okTxt);
-        GFX_DrawText(&okTxt, 160.0f - 23.5f, okBtnY + 5.0f, 1.0f, 0.6f, 0.6f, GFX_ALIGN_LEFT, C2D_Color32(255,255,255,255));
+        GFX_DrawText(&okTxt, 160.0f - 23.5f, okBtnY + 5.0f, 1.0f, 0.6f, 0.6f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(255,255,255,255));
 
         GFX_TEXT cancelTxt;
         GFX_TextParse(&cancelTxt, eventListBuf, "B - Anuluj");
         GFX_TextOptimize(&cancelTxt);
         float wC, hC;
         GFX_TextGetDimensions(&cancelTxt, 0.5f, 0.5f, &wC, &hC);
-        GFX_DrawText(&cancelTxt, 160.0f - (wC/2.0f), curY + 203.0f, 1.0f, 0.5f, 0.5f, GFX_ALIGN_LEFT, C2D_Color32(100,100,100,255));
+        GFX_DrawText(&cancelTxt, 160.0f - (wC/2.0f), curY + 203.0f, 1.0f, 0.5f, 0.5f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(100,100,100,255));
     }   
     if (openingSpinnerAlpha > 0.0f) {
         u8 spinBgAlpha = (u8)(100.0f * openingSpinnerAlpha);
-        GFX_DrawRectSolid(0, 0, 0.985f, 320, 240, C2D_Color32(0, 0, 0, spinBgAlpha));
+        GFX_DrawRectSolid(0, 0, 0.985f, 320, 240, GFX_COLOR_RGBA(0, 0, 0, spinBgAlpha));
         drawSpinner(160.0f, 120.0f, openingSpinnerAlpha);
     }
 
@@ -1284,7 +1284,7 @@ void sceneHomeMenuRender(void) {
         if (fadeProgress > 1.0f) fadeProgress = 1.0f;
         float fadeValue = 1.0f - fadeProgress;
         uint8_t alpha = (uint8_t)(fadeValue * 255.0f);
-        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, alpha));
+        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, GFX_COLOR_RGBA(255, 255, 255, alpha));
     }
 }
 

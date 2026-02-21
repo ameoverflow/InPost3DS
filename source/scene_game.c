@@ -31,10 +31,10 @@ void drawPlayer() {
 }
 
 void sceneGameRender(void) {
-    C2D_SceneBegin(left);
-    C2D_TargetClear(left, C2D_Color32(0, 0, 0, 255));
-	C2D_SceneBegin(bottom);
-    C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255));
+    // GFX_BeginSceneTop(0, true);
+    
+	// GFX_BeginSceneBottom();
+    
 
 }
 

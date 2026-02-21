@@ -155,8 +155,8 @@ void drawCaptureWaveform(float alphaVal) {
     u8 lineAlpha = (u8)((178.0f * alphaVal) / 255.0f);
     u8 shadowAlpha = (u8)alphaVal;
 
-    u32 lineColor = C2D_Color32(192, 255, 0, lineAlpha); 
-    u32 shadowColor = C2D_Color32(0, 0, 0, shadowAlpha);
+    u32 lineColor = GFX_COLOR_RGBA(192, 255, 0, lineAlpha); 
+    u32 shadowColor = GFX_COLOR_RGBA(0, 0, 0, shadowAlpha);
 
     for (int x = 0; x < 400; x+=2) {
         if (x * step >= (CAPTURE_SIZE / 2)) break;
@@ -296,7 +296,7 @@ void drawTopContent(float offset, float alphaFade) {
             
             
             if (currentY + height > 0 && currentY < 240) {
-                GFX_DrawText(&creditText[i], x + offset, currentY, 0.6f, 0.7f, 0.7f, GFX_ALIGN_LEFT, C2D_Color32(255, 255, 255, 255));
+                GFX_DrawText(&creditText[i], x + offset, currentY, 0.6f, 0.7f, 0.7f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(255, 255, 255, 255));
             }
             currentY += height + 10.0f;
         }
@@ -320,7 +320,7 @@ void drawBottomContent(void) {
             
             
             if (currentY + height > 0 && currentY < 240) {
-                GFX_DrawText(&creditText[i], x, currentY, 0.6f, 0.7f, 0.7f, GFX_ALIGN_LEFT, C2D_Color32(255, 255, 255, 255));
+                GFX_DrawText(&creditText[i], x, currentY, 0.6f, 0.7f, 0.7f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(255, 255, 255, 255));
             }
             currentY += height + 10.0f;
         }
@@ -337,8 +337,8 @@ void drawBottomContent(void) {
         
         if (pulseAlpha < 50) pulseAlpha = 50;
 
-        u32 exitColor = C2D_Color32(255, 255, 255, pulseAlpha);
-        u32 exitShadow = C2D_Color32(235, 163, 7, pulseAlpha);
+        u32 exitColor = GFX_COLOR_RGBA(255, 255, 255, pulseAlpha);
+        u32 exitShadow = GFX_COLOR_RGBA(235, 163, 7, pulseAlpha);
 
         
         
@@ -350,32 +350,32 @@ void sceneCreditsRender(void) {
     float logoAlphaVal = logoAlpha / 255.0f;
 
     
-    C2D_SceneBegin(left); 
-    C2D_TargetClear(left, C2D_Color32(0, 0, 0, 255));
+    GFX_BeginSceneTop(0, true); 
+    
     drawTopContent(0.0f, logoAlphaVal);
     
     if (flashAlpha > 0.0f) {
-        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, (u8)flashAlpha));
+        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, GFX_COLOR_RGBA(255, 255, 255, (u8)flashAlpha));
     }
 
     
     if (slider > 0.0f) {
-        C2D_SceneBegin(right);
-        C2D_TargetClear(right, C2D_Color32(0, 0, 0, 255));
+        GFX_BeginSceneTop(1, true);
+        
         drawTopContent(slider * -5.0f, logoAlphaVal); 
         
         if (flashAlpha > 0.0f) {
-            GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, (u8)flashAlpha));
+            GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, GFX_COLOR_RGBA(255, 255, 255, (u8)flashAlpha));
         }
     }
 
     
-    C2D_SceneBegin(bottom); 
-    C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255)); 
+    GFX_BeginSceneBottom(); 
+     
     drawBottomContent();
     
     if (flashAlpha > 0.0f) {
-        GFX_DrawRectSolid(0, 0, 0, 320, 240, C2D_Color32(255, 255, 255, (u8)flashAlpha));
+        GFX_DrawRectSolid(0, 0, 0, 320, 240, GFX_COLOR_RGBA(255, 255, 255, (u8)flashAlpha));
     }
 }
 

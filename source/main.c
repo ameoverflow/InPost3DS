@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include <malloc.h>
 #include "logs.h"
-#include "buttons.h"
 #include "cwav_shit.h"
 #include "scene_manager.h"
 #include "scene_debug.h"
@@ -43,7 +42,6 @@ extern bool logplz, readingoferta, json_done, citra_machen;
 extern float text_w, text_h, max_scroll;
 
 extern int cwavCount;
-extern Button buttonsy[100];
 size_t linear_bytes_used = 0;
 bool pausedForSleep = false;
 int Scene;
@@ -68,13 +66,7 @@ const u32 CAPTURE_SIZE = 0x340;
 float slider;
 bool saving_va = false;
 bool debug_stats = false;
-void executeButtonFunction(int buttonIndex) {
-    if (buttonIndex >= 0 && buttonIndex < 100 && buttonsy[buttonIndex].onClick) {
-        buttonsy[buttonIndex].onClick();
-    } else {
-        log_to_file("Invalid button index or function not assigned!\n");
-    }
-}
+
 
 int main(int argc, char* argv[]) {
     cwavUseEnvironment(CWAV_ENV_DSP);

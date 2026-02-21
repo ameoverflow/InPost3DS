@@ -352,7 +352,7 @@ void drawMainMenuTop(float offset) {
 		}
 
 		C2D_ImageTint shadowTint;
-		C2D_PlainImageTint(&shadowTint, C2D_Color32(0, 0, 0, 110), 1.0f);
+		C2D_PlainImageTint(&shadowTint, GFX_COLOR_RGBA(0, 0, 0, 110), 1.0f);
 
 		GFX_DrawImageAt(logo3ds, curX - 4.0f, ((240.0f - h) / 2.0f) + 4.0f, 1.0f, &shadowTint, bounceScale, bounceScale);
 		GFX_DrawImageAt(logo3ds, curX, (240.0f - h) / 2.0f, 1.0f, NULL, bounceScale, bounceScale);
@@ -364,23 +364,23 @@ void drawMainMenuTop(float offset) {
 
 		float fadeValue = 1.0f - fadeProgress; 
 		uint8_t alpha = (uint8_t)(fadeValue * 255.0f);
-		GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, alpha));
+		GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, GFX_COLOR_RGBA(255, 255, 255, alpha));
 	}
 
     if (Show_PLZ_LOGIN) {
 		float y = easeOut(400.0f, 100.0f, easet);
-		GFX_DrawShadowedText(&menu_Text[1], 200.0f - 4 + offset, y + 4, 1.0f, bounceTextScale, bounceTextScale, GFX_ALIGN_CENTER, C2D_Color32(0x00, 0x00, 0x00, 0x2e), C2D_Color32(0x00, 0x00, 0x00, 0x2e));
-		GFX_DrawShadowedText(&menu_Text[1], 200.0f + offset, y, 1.0f, bounceTextScale, bounceTextScale, GFX_ALIGN_CENTER, C2D_Color32(0xB1, 0xA2, 0x2F, 0xff), C2D_Color32(0xff, 0xff, 0xff, 0xff));
+		GFX_DrawShadowedText(&menu_Text[1], 200.0f - 4 + offset, y + 4, 1.0f, bounceTextScale, bounceTextScale, GFX_ALIGN_CENTER, GFX_COLOR_RGBA(0x00, 0x00, 0x00, 0x2e), GFX_COLOR_RGBA(0x00, 0x00, 0x00, 0x2e));
+		GFX_DrawShadowedText(&menu_Text[1], 200.0f + offset, y, 1.0f, bounceTextScale, bounceTextScale, GFX_ALIGN_CENTER, GFX_COLOR_RGBA(0xB1, 0xA2, 0x2F, 0xff), GFX_COLOR_RGBA(0xff, 0xff, 0xff, 0xff));
 	}
     
     // todo: zrobić to
-    //drawShadowedText_noncentered(&menu_Text[2], 10.0f, 220, 1.0f, 0.5f, 0.5f, C2D_Color32(0xB1, 0xA2, 0x2F, 0xff), C2D_Color32(0xff, 0xff, 0xff, 0xff));
+    //drawShadowedText_noncentered(&menu_Text[2], 10.0f, 220, 1.0f, 0.5f, 0.5f, GFX_COLOR_RGBA(0xB1, 0xA2, 0x2F, 0xff), GFX_COLOR_RGBA(0xff, 0xff, 0xff, 0xff));
 
     if (showTutorialConfirmation) {
         float pT = tutorialPopupAnimTimer / TUTORIAL_POPUP_DURATION;
         if (pT > 1.0f) pT = 1.0f;
         u8 dimAlpha = (u8)(150.0f * pT);
-        GFX_DrawRectSolid(0, 0, 0.98f, 400, 240, C2D_Color32(0, 0, 0, dimAlpha));
+        GFX_DrawRectSolid(0, 0, 0.98f, 400, 240, GFX_COLOR_RGBA(0, 0, 0, dimAlpha));
     }
 }
 
@@ -432,18 +432,18 @@ void sceneMainMenuRender(void) {
          x_image -= scroll_speed * (dt * 60.0f);
     }
     
-    C2D_SceneBegin(left);
-    C2D_TargetClear(left, C2D_Color32(0, 0, 0, 255));
+    GFX_BeginSceneTop(0, true);
+    
     drawMainMenuTop(0.0f);
 
     if (slider > 0.0f) {
-        C2D_SceneBegin(right);
-        C2D_TargetClear(right, C2D_Color32(0, 0, 0, 255));
+        GFX_BeginSceneTop(1, true);
+        
         drawMainMenuTop(slider * 5.0f);
     }
 
-    C2D_SceneBegin(bottom);
-	C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255));
+    GFX_BeginSceneBottom();
+	
 	GFX_DrawImageAt(bg_bottom, bg_x, 0.0f, 0.0f, NULL, 1.0f, 1.0f);
 	
     if (logoactive) {
@@ -452,7 +452,7 @@ void sceneMainMenuRender(void) {
 		} else {
 			x_text = 160.0f;
 		}
-		GFX_DrawShadowedText(&menu_Text[0], x_text, 100.0f, 0.5f, 1.5f, 1.5f, GFX_ALIGN_CENTER, C2D_Color32(0xB1, 0xA2, 0x2F, dissapeared ? 0xff : 0x00), C2D_Color32(0xff, 0xff, 0xff, dissapeared ? 0xff : 0x00));
+		GFX_DrawShadowedText(&menu_Text[0], x_text, 100.0f, 0.5f, 1.5f, 1.5f, GFX_ALIGN_CENTER, GFX_COLOR_RGBA(0xB1, 0xA2, 0x2F, dissapeared ? 0xff : 0x00), GFX_COLOR_RGBA(0xff, 0xff, 0xff, dissapeared ? 0xff : 0x00));
 	}
 
     if (showTutorialConfirmation) {
@@ -462,7 +462,7 @@ void sceneMainMenuRender(void) {
         float alphaFactor = pT;
 
         u8 dimAlpha = (u8)(150.0f * alphaFactor);
-        GFX_DrawRectSolid(0, 0, 0.98f, 320, 240, C2D_Color32(0, 0, 0, dimAlpha));
+        GFX_DrawRectSolid(0, 0, 0.98f, 320, 240, GFX_COLOR_RGBA(0, 0, 0, dimAlpha));
         
         float mwW = 260.0f;
         float mwH = 100.0f;
@@ -473,7 +473,7 @@ void sceneMainMenuRender(void) {
         float curY = (240.0f - curH) / 2.0f;
 
         u8 bgAlpha = (u8)(255.0f * alphaFactor);
-        GFX_DrawRectSolid(curX, curY, 0.99f, curW, curH, C2D_Color32(255, 255, 255, bgAlpha));
+        GFX_DrawRectSolid(curX, curY, 0.99f, curW, curH, GFX_COLOR_RGBA(255, 255, 255, bgAlpha));
         
         GFX_TEXTBUF popupBuf = GFX_TextBufNew(512);
         GFX_TEXT qText, optText;
@@ -491,7 +491,7 @@ void sceneMainMenuRender(void) {
         GFX_TextGetDimensions(&qText, tScale, tScale, &wQ, &hQ);
         GFX_TextGetDimensions(&optText, tScale, tScale, &wO, &hO);
         
-        u32 txtColor = C2D_Color32(0, 0, 0, bgAlpha);
+        u32 txtColor = GFX_COLOR_RGBA(0, 0, 0, bgAlpha);
         GFX_DrawText(&qText, 160.0f - (wQ/2), curY + (25.0f * ease), 1.0f, tScale, tScale, GFX_ALIGN_LEFT, txtColor);
         GFX_DrawText(&optText, 160.0f - (wO/2), curY + (65.0f * ease), 1.0f, tScale, tScale, GFX_ALIGN_LEFT, txtColor);
         
@@ -504,7 +504,7 @@ void sceneMainMenuRender(void) {
 
 		float fadeValue = 1.0f - fadeProgress; 
 		uint8_t alpha = (uint8_t)(fadeValue * 255.0f);
-        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, C2D_Color32(255, 255, 255, alpha));
+        GFX_DrawRectSolid(0, 0, 1.0f, 400, 240, GFX_COLOR_RGBA(255, 255, 255, alpha));
 	}
 }
 
