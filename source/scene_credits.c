@@ -105,8 +105,13 @@ static const char* creditLines[] = {
     "Dzięki za ładowarke",
     "oraz fanarcika <3",
     "",
-    "i BartkaGM",
-    "Poprostu jesteś cool B)", 
+    "BartkaGM",
+    "Kiedy nowe NGW :tf:", 
+    "",
+    "oraz wszystkich Remconowiczów",
+    "którzy byli na prelekcji", 
+    "Dzięki za przyjście :D", 
+    "(AMBEREXPO odśnieżcie dach plz)", 
     "",
     "Serdeczne podziękowania dla",
     "wszystkich którzy wspierali",
@@ -273,8 +278,6 @@ void sceneCreditsUpdate(uint32_t kDown, uint32_t kHeld) {
 void drawTopContent(float offset, float alphaFade) {
     
     if (logo3ds->width) {
-        float logoX = (400 - logo3ds->width) / 2;
-        float logoY = (240 - logo3ds->height) / 2 - 20;
 
         C2D_ImageTint tint;
         C2D_AlphaImageTint(&tint, alphaFade); 

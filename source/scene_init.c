@@ -24,7 +24,6 @@ int VOICEACT = 0;
 bool VA_YES = false;
 
 
-#define SYSCLOCK_ARM11 268123480.0
 #define MAKE_IPV4(a,b,c,d) ((a) << 24 | (b) << 16 | (c) << 8 | (d))
 #define NTP_IP MAKE_IPV4(51, 137, 137, 111) 
 

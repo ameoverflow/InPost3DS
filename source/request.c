@@ -4,8 +4,6 @@
 bool doing_debug_logs;
 static Request request_queue[MAX_QUEUE];
 static int request_count = 0;
-static char *sprite_memory = NULL;
-static size_t sprite_memory_size = 0;
 static LightLock request_lock;
 static bool request_running = true;
 static Thread request_thread;
@@ -324,7 +322,7 @@ void request_worker(void* arg) {
                 struct my_error_mgr jerr;
 
                 cinfo.err = jpeg_std_error(&jerr.pub);
-                jerr.pub.error_exit = my_error_exit;
+                // jerr.pub.error_exit = my_error_exit;
 
                 if (setjmp(jerr.setjmp_buffer)) {
                     jpeg_destroy_decompress(&cinfo);

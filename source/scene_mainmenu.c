@@ -60,8 +60,6 @@ bool Show_PLZ_LOGIN;
 static char mybuf[60];
 static char mybuf2[60];
 static SwkbdState swkbd;
-static SwkbdStatusData swkbdStatus;
-static SwkbdLearningData swkbdLearning;
 SwkbdButton button = SWKBD_BUTTON_NONE;
 bool Sent_NRTEL;
 bool Sent_SMSCODE;

@@ -117,7 +117,7 @@ void FS_CheckIfInPostIstnieje(){
     FS_Archive sdmcArchive;
     FSUSER_OpenArchive(&sdmcArchive, ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, ""));
     FS_Path folderPath = fsMakePath(PATH_ASCII, "/3ds/InPost3DS");
-    Result res = czyFolderIstnieje(sdmcArchive, folderPath);
+    czyFolderIstnieje(sdmcArchive, folderPath);
 
     FSUSER_CloseArchive(sdmcArchive);
     fsExit();
