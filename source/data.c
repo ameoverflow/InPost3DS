@@ -122,3 +122,17 @@ void FS_CheckIfInPostIstnieje(){
     FSUSER_CloseArchive(sdmcArchive);
     fsExit();
 }
+
+u32 kDown;
+u32 kHeld;
+
+void INPUT_Scan(){
+    hidScanInput();
+    kDown = hidKeysDown();
+    kHeld = hidKeysHeld();
+}
+
+// na 3dsie zbytnio to nie ma co setupować, bardziej na switchu
+void INPUT_Setup(){
+    return;
+}

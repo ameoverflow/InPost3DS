@@ -70,75 +70,6 @@ GFX_IMAGE* tut3_0;
 u64 lastFrameTime = 0;
 int currentFrame = 0;
 
-void ResetAnimState(SpriteAnimState* anim) {
-    anim->currentFrame = 0;
-    anim->lastFrameTime = osGetTime();
-    anim->done = false;
-    anim->loopedtimes = 0;
-    anim->halting = false;
-    anim->haltStartTime = 0;
-}
-
-void PlaySprite(float scale, C2D_SpriteSheet frames, int framerate, int framecount,
-                float x, float y, SpriteAnimState* anim, int direction, float depth) {
-    // chuj w tą funckje for now
-
-    // if (!frames || framecount == 0 || !anim) return;
-
-    // int totalFrames = C2D_SpriteSheetCount(frames);
-    // if (framecount > totalFrames) framecount = totalFrames;
-    // if (anim->done) return;
-
-    // u64 now = osGetTime();
-
-    
-    // if (now - anim->lastFrameTime >= 1000 / framerate) {
-    //     bool shouldAdvance = true;
-
-    //     if (anim->halt_at_frame >= 0 && anim->currentFrame == anim->halt_at_frame) {
-    //         if (!anim->halting) {
-    //             anim->halting = true;
-    //             anim->haltStartTime = now;
-    //             shouldAdvance = false;
-    //         } else {
-                
-    //             if (now - anim->haltStartTime >= anim->halt_for_howlong) {
-    //                 anim->halting = false;
-    //                 shouldAdvance = true;
-    //             } else {
-    //                 shouldAdvance = false;
-    //             }
-    //         }
-    //     }
-
-    //     if (shouldAdvance) {
-    //         anim->currentFrame++;
-    //         if (anim->currentFrame >= framecount) {
-    //             if (anim->loops == -1) {
-    //                 anim->currentFrame = 0;  
-    //             } else {
-    //                 anim->loopedtimes++;
-    //                 if (anim->loopedtimes >= anim->loops) {
-    //                     anim->done = true;
-    //                     anim->currentFrame = framecount - 1; 
-    //                     return;
-    //                 } else {
-    //                     anim->currentFrame = 0; 
-    //                 }
-    //             }
-    //         }
-
-
-    //         anim->lastFrameTime = now;
-    //     }
-    // }
-    
-    // if (anim->currentFrame < 0 || anim->currentFrame >= totalFrames) return;
-
-    // GFX_IMAGE* frameImage = C2D_SpriteSheetGetImage(frames, anim->currentFrame);
-    // if (!frameImage.subtex) return;
-    // GFX_DrawImageAt(frameImage, x, y, depth, NULL, direction * scale, scale);
-}
 
 void spritesInit() {
     srand(osGetTime());
@@ -147,15 +78,6 @@ void spritesInit() {
     
     s64 memBefore = osGetMemRegionUsed(MEMREGION_APPLICATION);
 
-    // logo = C2D_SpriteSheetLoad("romfs:/gfx/logo.t3x");
-    // placeholder_chan = C2D_SpriteSheetLoad("romfs:/gfx/placeholder_chan.t3x");
-    // arhn = C2D_SpriteSheetLoad("romfs:/gfx/arhn.t3x");
-    // chan = C2D_SpriteSheetLoad("romfs:/gfx/chan.t3x");
-    // kun = C2D_SpriteSheetLoad("romfs:/gfx/kun.t3x");
-    // pakuj = C2D_SpriteSheetLoad("romfs:/gfx/pakuj.t3x");
-    // backgrounds = C2D_SpriteSheetLoad("romfs:/gfx/bg.t3x");
-    // logo_inpost = C2D_SpriteSheetLoad("romfs:/gfx/logo_inpost.t3x");
-    // paczka = C2D_SpriteSheetLoad("romfs:/gfx/paczka.t3x");
     
     if (rand() % 2 == 0) {
         fridge_image = GFX_LoadTexture("romfs:/gfx/tehfridge2.t3x", 0);
@@ -163,13 +85,6 @@ void spritesInit() {
         fridge_image = GFX_LoadTexture("romfs:/gfx/tehfridge.t3x", 0);
     }
     
-    // tutorial0 = C2D_SpriteSheetLoad("romfs:/gfx/tutorial_0.t3x");
-    // tutorial1 = C2D_SpriteSheetLoad("romfs:/gfx/tutorial_1.t3x");
-    // tutorial2 = C2D_SpriteSheetLoad("romfs:/gfx/tutorial_2.t3x");
-    // tutorial3 = C2D_SpriteSheetLoad("romfs:/gfx/tutorial_3.t3x");
-    // tutorial0_bot = C2D_SpriteSheetLoad("romfs:/gfx/tutorial_0_bottom.t3x");
-    // tutorial1_bot = C2D_SpriteSheetLoad("romfs:/gfx/tutorial_1_bottom.t3x");
-
     
     
     s64 memAfter = osGetMemRegionUsed(MEMREGION_APPLICATION);
@@ -211,7 +126,6 @@ void spritesInit() {
     kun_placeholder = GFX_LoadTexture("romfs:/gfx/placeholder_chan.t3x", 1);
     bg_top = GFX_LoadTexture("romfs:/gfx/bg.t3x", 0);
     bg_bottom = GFX_LoadTexture("romfs:/gfx/bg.t3x", 1);
-    // fridge_image = C2D_SpriteSheetGetImage(fridge, 0);
     logo3ds = GFX_LoadTexture("romfs:/gfx/logo_inpost.t3x", 0);
     paczka_closed = GFX_LoadTexture("romfs:/gfx/paczka.t3x", 0);
     znaczek = GFX_LoadTexture("romfs:/gfx/paczka.t3x", 2);

@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
     ndspInit();
     init_logger();
     doing_debug_logs = false;
-    
+    INPUT_Setup();
     SOC_buffer = (u32*)memalign(SOC_ALIGN, SOC_BUFFERSIZE);
     if (!SOC_buffer || socInit(SOC_buffer, SOC_BUFFERSIZE)) {
         printf("SOC init failed\n");
@@ -122,9 +122,7 @@ int main(int argc, char* argv[]) {
     FS_CheckIfInPostIstnieje();
 
     while (aptMainLoop()) {
-        hidScanInput();
-        u32 kDown = hidKeysDown();
-        u32 kHeld = hidKeysHeld();
+        INPUT_Scan();
         slider = osGet3DSliderState();
 
         if ((kDown & KEY_START) || saving_va)

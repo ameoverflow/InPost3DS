@@ -5,18 +5,6 @@
 #include <stdlib.h>
 #include "data.h"
 
-typedef struct {
-    int currentFrame;
-    u64 lastFrameTime;
-    int loopedtimes;
-    int loops;
-    bool done;
-    
-    int halt_at_frame;
-    int halt_for_howlong; 
-    u64 haltStartTime;    
-    bool halting;         
-} SpriteAnimState;
 
 
 extern GFX_IMAGE* test;
@@ -78,7 +66,5 @@ extern GFX_IMAGE* tut2_0;
 
 extern GFX_IMAGE* tut3_0;
 
-void ResetAnimState(SpriteAnimState* anim);
-void PlaySprite(float scale, C2D_SpriteSheet frames, int framerate, int framecount, float x, float y, SpriteAnimState* anim, int direction, float depth);
 void spritesInit();
 #endif

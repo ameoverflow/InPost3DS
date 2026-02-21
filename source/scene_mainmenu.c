@@ -38,7 +38,6 @@ float easeOut(float start, float end, float t) {
 }
 
 
-SpriteAnimState test_state = {0, 0, 0, 5, false, 0, 0, 0, false};
 float bounceScale = 1.2f;
 float bounceVelocity = -0.01f;
 bool bounceActive;
@@ -373,8 +372,7 @@ void drawMainMenuTop(float offset) {
 		GFX_DrawShadowedText(&menu_Text[1], 200.0f + offset, y, 1.0f, bounceTextScale, bounceTextScale, GFX_ALIGN_CENTER, GFX_COLOR_RGBA(0xB1, 0xA2, 0x2F, 0xff), GFX_COLOR_RGBA(0xff, 0xff, 0xff, 0xff));
 	}
     
-    // todo: zrobić to
-    //drawShadowedText_noncentered(&menu_Text[2], 10.0f, 220, 1.0f, 0.5f, 0.5f, GFX_COLOR_RGBA(0xB1, 0xA2, 0x2F, 0xff), GFX_COLOR_RGBA(0xff, 0xff, 0xff, 0xff));
+    GFX_DrawShadowedText(&menu_Text[2], 10.0f, 220, 1.0f, 0.5f, 0.5f, GFX_ALIGN_LEFT, GFX_COLOR_RGBA(0xB1, 0xA2, 0x2F, 0xff), GFX_COLOR_RGBA(0xff, 0xff, 0xff, 0xff));
 
     if (showTutorialConfirmation) {
         float pT = tutorialPopupAnimTimer / TUTORIAL_POPUP_DURATION;

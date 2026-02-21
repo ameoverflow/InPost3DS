@@ -31,4 +31,10 @@ void GFX_TextParse(GFX_TEXT* text, GFX_TEXTBUF buf, const char* str);
 void GFX_TextOptimize(GFX_TEXT* text);
 void GFX_TextGetDimensions(const GFX_TEXT* text, float scaleX, float scaleY, float* outWidth, float* outHeight);
 void FS_CheckIfInPostIstnieje();
+
+extern u32 kDown;
+extern u32 kHeld;
+
+void INPUT_Scan();
+void INPUT_Setup();
 #endif
