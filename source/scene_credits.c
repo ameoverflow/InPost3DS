@@ -168,12 +168,12 @@ void drawCaptureWaveform(float alphaVal) {
         float currentX = (float)x;
 
         if (x > 0) {
-            C2D_DrawLine(
+            GFX_DrawLine(
                 prevX, prevY, shadowColor, 
                 currentX, currentY + 3.0f, shadowColor,
                 2.0f, 0.5f 
             );
-            C2D_DrawLine(
+            GFX_DrawLine(
                 prevX, prevY, lineColor,   
                 currentX, currentY, lineColor,
                 2.0f, 0.5f 

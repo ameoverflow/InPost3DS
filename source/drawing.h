@@ -2,6 +2,7 @@
 #define DRAWING_H
 
 #include "data.h"
+#include "scene_manager.h"
 extern C3D_RenderTarget* left;
 extern C3D_RenderTarget* right;
 extern C3D_RenderTarget* bottom;
@@ -29,4 +30,12 @@ void GFX_BeginSceneTop(int side, bool should_clear);
 
 // stricte 3ds only 
 void GFX_BeginSceneBottom();
+
+void GFX_RenderFrame();
+
+void GFX_DrawRectangle(float x, float y, float depth, float w, float h, u32 top_left, u32 top_right, u32 bottom_left, u32 bottom_right);
+
+void GFX_DrawCircleSolid(float x, float y, float depth, float radius, u32 color);
+
+void GFX_DrawLine(float x1, float y1, u32 color0, float x2, float y2, u32 color1, float thick, float depth);
 #endif

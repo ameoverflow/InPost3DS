@@ -729,9 +729,9 @@ void drawSpinner(float cx, float cy, float alphaVal) {
         float dotAlpha = (0.3f + 0.7f * (float)i / SPINNER_DOT_COUNT) * alphaVal;
         u8 a = (u8)(dotAlpha * 255);
         u32 shadowColor = GFX_COLOR_RGBA(0, 0, 0, a / 2);
-        C2D_DrawRectangle(x - dotSize / 2.0f + shadowOffset, y - dotSize / 2.0f + shadowOffset, 0.98f, dotSize, dotSize, shadowColor, shadowColor, shadowColor, shadowColor);
+        GFX_DrawRectangle(x - dotSize / 2.0f + shadowOffset, y - dotSize / 2.0f + shadowOffset, 0.98f, dotSize, dotSize, shadowColor, shadowColor, shadowColor, shadowColor);
         u32 dotColor = GFX_COLOR_RGBA(255, 255, 255, a);
-        C2D_DrawRectangle(x - dotSize / 2.0f, y - dotSize / 2.0f, 0.99f, dotSize, dotSize, dotColor, dotColor, dotColor, dotColor);
+        GFX_DrawRectangle(x - dotSize / 2.0f, y - dotSize / 2.0f, 0.99f, dotSize, dotSize, dotColor, dotColor, dotColor, dotColor);
     }
 }
 
@@ -1068,7 +1068,7 @@ void sceneHomeMenuRender(void) {
             float scrollBaseY = detailsYOffset + eventListScroll;
             u32 gradTop = GFX_COLOR_RGBA(255, 255, 255, listAlpha);
             u32 gradBot = GFX_COLOR_RGBA(255, 255, 140, listAlpha);
-            C2D_DrawRectangle(0, detailsYOffset, 0.6f, 320, 240, gradTop, gradTop, gradBot, gradBot);
+            GFX_DrawRectangle(0, detailsYOffset, 0.6f, 320, 240, gradTop, gradTop, gradBot, gradBot);
 
             u32 dateColor = GFX_COLOR_RGBA(100, 100, 100, listAlpha);
             u32 nameColor = GFX_COLOR_RGBA(0, 0, 0, listAlpha);

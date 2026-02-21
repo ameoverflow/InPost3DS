@@ -118,13 +118,13 @@ static Result setSystemTime(u64 msSince1900) {
 static void drawRoundedBoxGradient(float x, float y, float z, float w, float h, u32 cTop, u32 cBot, float r) {
     if (r * 2 > w) r = w / 2;
     if (r * 2 > h) r = h / 2;
-    C2D_DrawCircleSolid(x + r, y + r, z, r, cTop);                 
-    C2D_DrawCircleSolid(x + w - r, y + r, z, r, cTop);             
-    C2D_DrawCircleSolid(x + r, y + h - r, z, r, cBot);             
-    C2D_DrawCircleSolid(x + w - r, y + h - r, z, r, cBot);         
-    C2D_DrawRectangle(x, y + r, z, r, h - 2 * r, cTop, cTop, cBot, cBot);
-    C2D_DrawRectangle(x + w - r, y + r, z, r, h - 2 * r, cTop, cTop, cBot, cBot);
-    C2D_DrawRectangle(x + r, y, z, w - 2 * r, h, cTop, cTop, cBot, cBot);
+    GFX_DrawCircleSolid(x + r, y + r, z, r, cTop);                 
+    GFX_DrawCircleSolid(x + w - r, y + r, z, r, cTop);             
+    GFX_DrawCircleSolid(x + r, y + h - r, z, r, cBot);             
+    GFX_DrawCircleSolid(x + w - r, y + h - r, z, r, cBot);         
+    GFX_DrawRectangle(x, y + r, z, r, h - 2 * r, cTop, cTop, cBot, cBot);
+    GFX_DrawRectangle(x + w - r, y + r, z, r, h - 2 * r, cTop, cTop, cBot, cBot);
+    GFX_DrawRectangle(x + r, y, z, w - 2 * r, h, cTop, cTop, cBot, cBot);
 }
 
 static void drawRoundedBoxSolid(float x, float y, float z, float w, float h, u32 color, float r) {
@@ -133,10 +133,10 @@ static void drawRoundedBoxSolid(float x, float y, float z, float w, float h, u32
     GFX_DrawRectSolid(x + r, y, z, w - 2 * r, h, color);
     GFX_DrawRectSolid(x, y + r, z, r, h - 2 * r, color);
     GFX_DrawRectSolid(x + w - r, y + r, z, r, h - 2 * r, color);
-    C2D_DrawCircleSolid(x + r, y + r, z, r, color);
-    C2D_DrawCircleSolid(x + w - r, y + r, z, r, color);
-    C2D_DrawCircleSolid(x + r, y + h - r, z, r, color);
-    C2D_DrawCircleSolid(x + w - r, y + h - r, z, r, color);
+    GFX_DrawCircleSolid(x + r, y + r, z, r, color);
+    GFX_DrawCircleSolid(x + w - r, y + r, z, r, color);
+    GFX_DrawCircleSolid(x + r, y + h - r, z, r, color);
+    GFX_DrawCircleSolid(x + w - r, y + h - r, z, r, color);
 }
 
 int random_val; 

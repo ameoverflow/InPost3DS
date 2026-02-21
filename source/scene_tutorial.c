@@ -375,7 +375,7 @@ void drawTutorialTop(float offset) {
     
     float uiOffset = offset * 0.5f; 
     
-    C2D_DrawRectangle(-20 + uiOffset, currentBoxY, 0.8f, 450.0f, boxH, colorTop, colorTop, colorBot, colorBot);
+    GFX_DrawRectangle(-20 + uiOffset, currentBoxY, 0.8f, 450.0f, boxH, colorTop, colorTop, colorBot, colorBot);
     GFX_DrawRectSolid(-20 + uiOffset, currentBoxY, 0.85f, 450.0f, 2.0f, GFX_COLOR_RGBA(255, 204, 0, 255));
 
     float textX = 160.0f; 

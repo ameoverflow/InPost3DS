@@ -137,12 +137,7 @@ int main(int argc, char* argv[]) {
         #endif
 
         sceneManagerUpdate(kDown, kHeld);
-
-        C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
-        sceneManagerRender();
-
-
-        C3D_FrameEnd(0);
+        GFX_RenderFrame();
     }
 
     close_logger();

@@ -91,3 +91,21 @@ void GFX_BeginSceneBottom(){
     C2D_SceneBegin(bottom);
     C2D_TargetClear(bottom, C2D_Color32(0, 0, 0, 255));
 }
+
+void GFX_RenderFrame(){
+    C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+    sceneManagerRender();
+    C3D_FrameEnd(0);
+}
+
+void GFX_DrawRectangle(float x, float y, float depth, float w, float h, u32 top_left, u32 top_right, u32 bottom_left, u32 bottom_right){
+    C2D_DrawRectangle(x, y, depth, w, h, top_left, top_right, bottom_left, bottom_right);
+}
+
+void GFX_DrawCircleSolid(float x, float y, float depth, float radius, u32 color){
+    C2D_DrawCircleSolid(x, y, depth, radius, color);         
+}
+
+void GFX_DrawLine(float x1, float y1, u32 color0, float x2, float y2, u32 color1, float thick, float depth){
+    C2D_DrawLine(x1, y1, color0, x2, y2, color1, thick, depth);
+}
