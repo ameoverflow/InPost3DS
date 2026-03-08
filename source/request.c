@@ -109,16 +109,17 @@ int my_curl_debug_callback(CURL *handle, curl_infotype type, char *data, size_t 
     return 0;
 }
 
-// func that actually pushes the request
-bool refresh_data(const char *url, const char *data, struct curl_slist *headers, ResponseBuffer *response_buf) {
+bool refresh_data(CURL *curl, const char *url, const char *data, struct curl_slist *headers, ResponseBuffer *response_buf) {
     bool request_failed = false;
     bool retried_after_401 = false;
 
 retry_request:
+    LightLock_Lock(&global_response_lock);
     youfuckedup = false;
     czasfuckup = false;
     requestdone = false;
     loadingshit = true;
+    LightLock_Unlock(&global_response_lock);
 
     if (!url || url[0] == '\0' || !response_buf) {
         if (!doing_debug_logs) {
@@ -126,17 +127,13 @@ retry_request:
         }
         return true;
     }
+
     if (!doing_debug_logs) {
         log_to_file("[refresh_data] --- HTTP REQUEST BEGIN ---");
         log_to_file("[refresh_data] URL: %s", url);
-    }
-
-    if (!doing_debug_logs) {
         for (struct curl_slist *h = headers; h != NULL; h = h->next)
             log_to_file("  %s", h->data);
-    }
-
-    if (!doing_debug_logs) {
+            
         if (data && strcmp(url, "https://zabka-snrs.zabka.pl/v4/server/time") != 0) {
             log_to_file("[refresh_data] Body:\n%s", data);
         } else {
@@ -147,24 +144,17 @@ retry_request:
     if (response_buf->data) {
         free(response_buf->data);
         response_buf->data = NULL;
-        response_buf->size = 0;
     }
+    response_buf->size = 0;
 
-    CURL *curl = curl_easy_init();
-    if (!curl) {
-        if (!doing_debug_logs) {
-            log_to_file("[refresh_data] ERROR: curl_easy_init() failed.");
-        }
-        return true;
-    }
+    curl_easy_reset(curl);
 
-    
-    
     curl_easy_setopt(curl, CURLOPT_CAINFO, "romfs:/cacert.pem");
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_TCP_NODELAY, 1L);
+
     if (data && (strstr(url, "v1") || strstr(url, "collect"))) {
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
     }
@@ -184,14 +174,14 @@ retry_request:
         if (!doing_debug_logs) {
             log_to_file("[refresh_data] Success. Code: %ld", response_code);
         }
-        
     }
     log_to_file("[refresh_data] Response Body:\n%s", response_buf->data);
-    curl_easy_cleanup(curl);
+
+    LightLock_Lock(&global_response_lock);
     loadingshit = false;
     requestdone = true;
-
     if (response_code == 0) czasfuckup = true;
+    LightLock_Unlock(&global_response_lock);
 
     if (response_code == 401 && !retried_after_401) {
         if (!doing_debug_logs) {
@@ -205,13 +195,7 @@ retry_request:
         char refresh_request[256];
         snprintf(refresh_request, sizeof(refresh_request), "{\"refreshToken\":\"%s\"}", refreshToken);
 
-        if (get_refresh_token.data) {
-            free(get_refresh_token.data);
-            get_refresh_token.data = NULL;
-            get_refresh_token.size = 0;
-        }
-
-        refresh_data("https://api-inmobile-pl.easypack24.net/v1/authenticate", refresh_request, refresh_headers, &get_refresh_token);
+        refresh_data(curl, "https://api-inmobile-pl.easypack24.net/v1/authenticate", refresh_request, refresh_headers, &get_refresh_token);
 
         curl_slist_free_all(refresh_headers);
 
@@ -219,12 +203,8 @@ retry_request:
             parseRefreshedToken(get_refresh_token.data);
         }
 
-
-        headers = NULL; 
         struct curl_slist *retry_headers = NULL;
         char authheader[2048];
-        
-
         snprintf(authheader, sizeof(authheader), "Authorization: %s", authToken);
         
         retry_headers = curl_slist_append(retry_headers, "Content-Type: application/json");
@@ -232,7 +212,6 @@ retry_request:
         retry_headers = curl_slist_append(retry_headers, authheader);
         
         headers = retry_headers;
-
         retried_after_401 = true;
         goto retry_request;
     }
@@ -245,9 +224,11 @@ retry_request:
     if (retried_after_401 && headers) {
         curl_slist_free_all(headers);
     }
+    
     if (!doing_debug_logs) {
         log_to_file("[refresh_data] Request Done");
     }
+    
     return request_failed;
 }
 
@@ -255,6 +236,12 @@ retry_request:
 
 void request_worker(void* arg) {
     ResponseBuffer local_buf = {NULL, 0, false};
+    
+    CURL *worker_curl = curl_easy_init();
+    if (!worker_curl) {
+        log_to_file("[request_worker] FATAL: Failed to init cURL");
+        return;
+    }
 
     while (request_running) {
         LightLock_Lock(&request_lock);
@@ -283,7 +270,7 @@ void request_worker(void* arg) {
             continue;
         }
 
-        refresh_data(req.url, req.data, req.headers, buf);
+        refresh_data(worker_curl, req.url, req.data, req.headers, buf);
 
         if (req.response && req.response_size && buf->data) {
             *req.response = buf->data;
@@ -455,6 +442,7 @@ void request_worker(void* arg) {
             req.response_buf->done = true;
         }
     }
+    curl_easy_cleanup(worker_curl);
 }
 
 //pretty self-explanatory

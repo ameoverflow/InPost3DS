@@ -60,7 +60,7 @@ void queue_request(const char *url, const char *data, struct curl_slist *headers
                    ResponseBuffer *response_buf, bool is_binary);
 
 void request_worker(void* arg);
-bool refresh_data(const char *url, const char *data, struct curl_slist *headers, ResponseBuffer *buf);
+bool refresh_data(CURL *curl, const char *url, const char *data, struct curl_slist *headers, ResponseBuffer *response_buf);
 void load_image();
 size_t write_callback(void *ptr, size_t size, size_t nmemb, void *userdata);
 void log_request_to_file(const char *url, const char *data, struct curl_slist *headers, char *response);

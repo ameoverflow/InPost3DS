@@ -179,7 +179,7 @@ void sceneMainMenuInit(void) {
         GFX_TextParse(
         &menu_Text[2],
         MainMenu,
-        "Ver 1.0.2");
+        "Ver 1.0.3");
     #endif              
 }
 

@@ -770,6 +770,7 @@ void getPaczkomatImage(const char* url) {
 
 void getEverything() {
     doing_debug_logs = true;
+    CURL *debug_curl = curl_easy_init();
     log_to_file("LOGI ZBIORCZE (DEBUG PURPOSES ONLY)\n");
     struct curl_slist *headers = NULL;
 
@@ -786,17 +787,18 @@ void getEverything() {
     headers = curl_slist_append(headers, "User-Agent: InPost-Mobile/3.46.0(34600200) (Horizon 11.17.0-50U; AW715988204; Nintendo 3DS; pl)");
     free(authheader);
     log_to_file("[API] Paczki do ciebie:\n");
-    refresh_data("https://api-inmobile-pl.easypack24.net/v4/parcels/tracked", NULL, headers, &paczkas);
+    refresh_data(debug_curl, "https://api-inmobile-pl.easypack24.net/v4/parcels/tracked", NULL, headers, &paczkas);
     log_to_file("[RESPONSE] %s\n", paczkas.data);
     log_to_file("[API] Paczki od ciebie:\n");
-    refresh_data("https://api-inmobile-pl.easypack24.net/v4/parcels/sent", NULL, headers, &sent_paczkas);
+    refresh_data(debug_curl, "https://api-inmobile-pl.easypack24.net/v4/parcels/sent", NULL, headers, &sent_paczkas);
     log_to_file("[RESPONSE] %s\n", sent_paczkas.data);
     log_to_file("[API] Paczki zwrócone:\n");
-    refresh_data("https://api-inmobile-pl.easypack24.net/v1/returns/tickets", NULL, headers, &returned_paczkas);
+    refresh_data(debug_curl, "https://api-inmobile-pl.easypack24.net/v1/returns/tickets", NULL, headers, &returned_paczkas);
     log_to_file("[RESPONSE] %s\n", returned_paczkas.data);
     log_to_file("[API] Dane użytkownika:\n");
-    refresh_data("https://api-inmobile-pl.easypack24.net/izi/app/shopping/v2/profile", NULL, headers, &dane_usera);
+    refresh_data(debug_curl, "https://api-inmobile-pl.easypack24.net/izi/app/shopping/v2/profile", NULL, headers, &dane_usera);
     log_to_file("[RESPONSE] %s\n", dane_usera.data);
     doing_debug_logs = false;
     curl_slist_free_all(headers);
+    curl_easy_cleanup(debug_curl);
 }
