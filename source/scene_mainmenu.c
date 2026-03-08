@@ -17,6 +17,8 @@
 #include "scene_debug.h"
 #include "scene_init.h"
 #include "drawing.h"
+#include "cJSON.h"
+#include "utils.h"
 #define MAX_STARS 64
 
 bool musicisplaying = false;
@@ -155,15 +157,16 @@ void sceneMainMenuInit(void) {
 		LoggedIn = false;
 	} else {
 		LoggedIn = true;
-		json_t *jsonfl = json_load_file("/3ds/InPost3DS/in_post_dane.json", 0, NULL);
+		cJSON *jsonfl = NULL;
+		open_json("/3ds/InPost3DS/in_post_dane.json", &jsonfl);
 		if(jsonfl) {
-            json_t *refresh = json_object_get(jsonfl, "refresh");
-            json_t *access = json_object_get(jsonfl, "access");
+            cJSON *refresh = cJSON_GetObjectItem(jsonfl, "refresh");
+            cJSON *access = cJSON_GetObjectItem(jsonfl, "access");
             if(refresh && access) {
-                refreshToken = strdup(json_string_value(refresh));
-                authToken = strdup(json_string_value(access));
+                refreshToken = strdup(cJSON_GetStringValue(refresh));
+                authToken = strdup(cJSON_GetStringValue(access));
             }
-            json_decref(jsonfl);
+            cJSON_Delete(jsonfl);
         }
 	}
     #ifdef DEBUG
@@ -307,23 +310,22 @@ void sceneMainMenuUpdate(uint32_t kDown, uint32_t kHeld) {
 
         if (send_kod_sms.done && !showTutorialConfirmation) {
             if (access("/3ds/InPost3DS/in_post_dane.json", F_OK) != 0) {
-                json_error_t error;
-                json_t *root = json_loads(send_kod_sms.data, 0, &error);
+                cJSON *root = cJSON_Parse(send_kod_sms.data);
                 if (root) {
-                    json_t *refreshtoken = json_object_get(root, "refreshToken");
-                    json_t *accesstoken  = json_object_get(root, "authToken");
+                    cJSON *refreshtoken = cJSON_GetObjectItem(root, "refreshToken");
+                    cJSON *accesstoken  = cJSON_GetObjectItem(root, "authToken");
                     if (refreshtoken && accesstoken) {
-                        const char* refreshtoken2 = json_string_value(refreshtoken);
-                        const char* accesstoken2  = json_string_value(accesstoken);
+                        const char* refreshtoken2 = cJSON_GetStringValue(refreshtoken);
+                        const char* accesstoken2  = cJSON_GetStringValue(accesstoken);
                         refreshToken = strdup(refreshtoken2);
                         authToken    = strdup(accesstoken2);
-                        json_t *oproot = json_object();
-                        json_object_set_new(oproot, "refresh", json_string(refreshtoken2));
-                        json_object_set_new(oproot, "access", json_string(accesstoken2));
-                        json_dump_file(oproot, "/3ds/InPost3DS/in_post_dane.json", JSON_COMPACT);
-                        json_decref(oproot);
+                        cJSON *oproot = cJSON_CreateObject();
+                        cJSON_AddItemToObject(oproot, "refresh", cJSON_CreateString(refreshtoken2));
+                        cJSON_AddItemToObject(oproot, "access", cJSON_CreateString(accesstoken2));
+                        save_json("/3ds/InPost3DS/in_post_dane.json", oproot);
+                        cJSON_Delete(oproot);
                     }
-                    json_decref(root);
+                    cJSON_Delete(root);
                 }
                 LoggedIn = true; 
                 showTutorialConfirmation = true;

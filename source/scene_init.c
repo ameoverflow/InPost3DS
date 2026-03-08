@@ -13,12 +13,14 @@
 #include <fcntl.h>
 #include <time.h>
 #include "drawing.h"
+#include "cJSON.h"
 
 #include "scene_init.h"
 #include "scene_manager.h"
 #include "main.h"
 #include "sprites.h"
 #include "inpost_api.h" 
+#include "utils.h"
 
 int VOICEACT = 0;
 bool VA_YES = false;
@@ -173,15 +175,16 @@ void sceneInitInit(void) {
     GFX_TextOptimize(&txtOptB);
     
     if (access("/3ds/InPost3DS/opcje.json", F_OK) == 0) {
-        json_t *jsonfl = json_load_file("/3ds/InPost3DS/opcje.json", 0, NULL);
-        json_t *czyjest = json_object_get(jsonfl, "VA");
+        cJSON *jsonfl = NULL;
+        open_json("/3ds/InPost3DS/opcje.json", &jsonfl);
+        cJSON *czyjest = cJSON_GetObjectItem(jsonfl, "VA");
 
-        VOICEACT = (int)json_integer_value(czyjest);
+        VOICEACT = (int)cJSON_GetNumberValue(czyjest);
         
         if (VOICEACT < 0) VOICEACT = 0;
         if (VOICEACT > 3) VOICEACT = 3;
 
-        json_decref(jsonfl);
+        cJSON_Delete(jsonfl);
     } else {
         VA_YES = false;
     }
@@ -341,10 +344,10 @@ void sceneInitUpdate(uint32_t kDown, uint32_t kHeld) {
                     else if (kDown & KEY_Y) VOICEACT = 3;
                     else if (kDown & KEY_B) VOICEACT = 0;
                     
-                    json_t *oproot = json_object();
-                    json_object_set_new(oproot, "VA", json_integer(VOICEACT));
-                    json_dump_file(oproot, "/3ds/InPost3DS/opcje.json", JSON_COMPACT);
-                    json_decref(oproot);
+                    cJSON *oproot = cJSON_CreateObject();
+                    cJSON_AddItemToObject(oproot, "VA", cJSON_CreateNumber(VOICEACT));
+                    save_json("/3ds/InPost3DS/opcje.json", oproot);
+                    cJSON_Delete(oproot);
                     
                     currentState = STATE_ANIM_OUT;
                     animTimer = 0.0f;

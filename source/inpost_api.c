@@ -13,7 +13,8 @@
 #include <stdlib.h>
 #include <curl/curl.h>
 #include "request.h"
-
+#include "cJSON.h"
+#include "utils.h"
 ResponseBuffer send_phone_numer = {NULL, 0, 0, false};
 ResponseBuffer send_kod_sms = {NULL, 0, 0, false};
 ResponseBuffer paczkas = {NULL, 0, 0, false};
@@ -39,13 +40,6 @@ bool pers_data_done;
 Paczka paczka_list[MAX_PACZKAS];
 int paczka_count = 0;
 
-static void jstrcpy(char *dst, size_t dstsz, json_t *jstr) {
-    if (json_is_string(jstr)) {
-        snprintf(dst, dstsz, "%s", json_string_value(jstr));
-    } else {
-        dst[0] = '\0';
-    }
-}
 
 
 void testrequest(){
@@ -87,43 +81,54 @@ void refresh_the_Token(char* refresh) {
     curl_slist_free_all(headers);
 }
 
-void parseRefreshedToken(const char* json){
-    json_t *root = json_loads(json, 0, NULL);
+void parseRefreshedToken(const char* json)
+{
+    cJSON *root = cJSON_Parse(json);
     if (!root) {
-        log_to_file("[parseRefreshedToken] jebło ale na początku");
+        log_to_file("[parseRefreshedToken] parse failed");
         return;
     }
 
-    json_t *accesstoken = json_object_get(root, "authToken");
-    json_t *refreshtoken = json_object_get(root, "refreshToken"); 
+    cJSON *accesstoken  = cJSON_GetObjectItemCaseSensitive(root, "authToken");
+    cJSON *refreshtoken = cJSON_GetObjectItemCaseSensitive(root, "refreshToken");
 
-    if (json_is_string(accesstoken)) {
-        if (authToken) free(authToken);
-        authToken = strdup(json_string_value(accesstoken));
+    if (cJSON_IsString(accesstoken) && accesstoken->valuestring) {
+        free(authToken);
+        authToken = strdup(accesstoken->valuestring);
     }
 
-    if (json_is_string(refreshtoken)) {
-        if (refreshToken) free(refreshToken);
-        refreshToken = strdup(json_string_value(refreshtoken));
+    if (cJSON_IsString(refreshtoken) && refreshtoken->valuestring) {
+        free(refreshToken);
+        refreshToken = strdup(refreshtoken->valuestring);
     }
 
-    json_t *rootenmach = json_load_file("/3ds/in_post_dane.json", 0, NULL);
-    if (rootenmach) {
-        if (json_is_string(accesstoken)) {
-            json_object_set_new(rootenmach, "access", json_string(json_string_value(accesstoken)));
+    cJSON *rootenmach = NULL;
+    open_json("/3ds/in_post_dane.json", &rootenmach);
+
+    if (!rootenmach) {
+        log_to_file("[parseRefreshedToken] failed to open stored json");
+        cJSON_Delete(root);
+        return;
+    }
+
+    if (cJSON_IsString(accesstoken) && accesstoken->valuestring) {
+        cJSON *newAccess = cJSON_CreateString(accesstoken->valuestring);
+        if (cJSON_ReplaceItemInObject(rootenmach, "access", newAccess) == 0) {
+            cJSON_AddItemToObject(rootenmach, "access", newAccess);
         }
-
-        if (json_is_string(refreshtoken)) {
-            json_object_set_new(rootenmach, "refresh", json_string(json_string_value(refreshtoken)));
-        }
-
-        json_dump_file(rootenmach, "/3ds/in_post_dane.json", JSON_INDENT(4));
-        json_decref(rootenmach);
-    } else {
-        log_to_file("[parseRefreshedToken] jebło");
     }
 
-    json_decref(root); 
+    if (cJSON_IsString(refreshtoken) && refreshtoken->valuestring) {
+        cJSON *newRefresh = cJSON_CreateString(refreshtoken->valuestring);
+        if (cJSON_ReplaceItemInObject(rootenmach, "refresh", newRefresh) == 0) {
+            cJSON_AddItemToObject(rootenmach, "refresh", newRefresh);
+        }
+    }
+
+    save_json("/3ds/in_post_dane.json", rootenmach);
+
+    cJSON_Delete(rootenmach);
+    cJSON_Delete(root);
 }
 
 // pobierz paczki
@@ -150,30 +155,25 @@ void getPaczkas() {
 // (używane w dev buildach) parsuj test dane
 void parseFakePaczkas() {
     bool ignore_bo_kurier = false;
-    json_error_t error;
 
-    json_t *root = json_load_file("romfs:/test_data.json", 0, &error);
-    if (!root) {
-        log_to_file("[parsePaczkas] JSON error: %s (line %d)",
-                    error.text, error.line);
-        return;
-    }
+    cJSON *root = NULL;
+    open_json("romfs:/test_data.json", &root);
 
-    json_t *parcels = json_object_get(root, "parcels");
-    if (!json_is_array(parcels)) {
+    cJSON *parcels = cJSON_GetObjectItemCaseSensitive(root, "parcels");
+    if (!cJSON_IsArray(parcels)) {
         log_to_file("[parsePaczkas] parcels is not array");
-        json_decref(root);
+        cJSON_Delete(root);
         return;
     }
 
     paczka_count = 0;
 
-    size_t total_parcels = json_array_size(parcels);
+    size_t total_parcels = cJSON_GetArraySize(parcels);
 
     for (size_t i = total_parcels; i > 0; i--) {
         
 
-        json_t *parcel = json_array_get(parcels, i - 1);
+        cJSON *parcel = cJSON_GetArrayItem(parcels, i - 1);
     
 
 
@@ -182,7 +182,7 @@ void parseFakePaczkas() {
 
         Paczka *p = &paczka_list[paczka_count];
         
-        if (strstr(json_string_value(json_object_get(parcel, "shipmentType")), "courier") != NULL) {
+        if (strstr(cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(parcel, "shipmentType")), "courier") != NULL) {
             p->courier_paczka = true;
             ignore_bo_kurier = true;
         } else {
@@ -191,76 +191,76 @@ void parseFakePaczkas() {
         }
        
         jstrcpy(p->shipmentNumber, sizeof(p->shipmentNumber),
-                json_object_get(parcel, "shipmentNumber"));
+                cJSON_GetObjectItemCaseSensitive(parcel, "shipmentNumber"));
         jstrcpy(p->statusGroup, sizeof(p->statusGroup),
-                json_object_get(parcel, "statusGroup"));
+                cJSON_GetObjectItemCaseSensitive(parcel, "statusGroup"));
         jstrcpy(p->parcelSize, sizeof(p->parcelSize),
-                json_object_get(parcel, "parcelSize"));
+                cJSON_GetObjectItemCaseSensitive(parcel, "parcelSize"));
         if (!ignore_bo_kurier) {
             jstrcpy(p->pickUpDate, sizeof(p->pickUpDate),
-                    json_object_get(parcel, "pickUpDate"));     
+                    cJSON_GetObjectItemCaseSensitive(parcel, "pickUpDate"));     
             jstrcpy(p->opencode, sizeof(p->opencode),
-                    json_object_get(parcel, "openCode"));
-            if (json_object_get(parcel, "openCode")) {
+                    cJSON_GetObjectItemCaseSensitive(parcel, "openCode"));
+            if (cJSON_GetObjectItemCaseSensitive(parcel, "openCode")) {
                 p->paczka_openable = true;
             } else {
                 p->paczka_openable = false;
             }
             jstrcpy(p->qrCode, sizeof(p->qrCode),
-                    json_object_get(parcel, "qrCode"));
+                    cJSON_GetObjectItemCaseSensitive(parcel, "qrCode"));
         } 
         jstrcpy(p->status, sizeof(p->status),
-                json_object_get(parcel, "status"));
+                cJSON_GetObjectItemCaseSensitive(parcel, "status"));
         if (strstr(p->status, "DELIVERED")) {
             p->paczka_openable = false;
         } 
         if (ignore_bo_kurier) {
-            json_t *sender = json_object_get(parcel, "sender");
-            json_t *sender_name = json_object_get(sender, "name");
+            cJSON *sender = cJSON_GetObjectItemCaseSensitive(parcel, "sender");
+            cJSON *sender_name = cJSON_GetObjectItemCaseSensitive(sender, "name");
             jstrcpy(p->pickupPointName, sizeof(p->pickupPointName), sender_name);
         }
         
         if (!ignore_bo_kurier) {
-            json_t *pickup = json_object_get(parcel, "pickUpPoint");
-            if (json_is_object(pickup)) {
+            cJSON *pickup = cJSON_GetObjectItemCaseSensitive(parcel, "pickUpPoint");
+            if (cJSON_IsObject(pickup)) {
                 jstrcpy(p->pickupPointName, sizeof(p->pickupPointName),
-                        json_object_get(pickup, "name"));
+                        cJSON_GetObjectItemCaseSensitive(pickup, "name"));
                 jstrcpy(p->imageUrl, sizeof(p->imageUrl),
-                        json_object_get(pickup, "imageUrl"));
+                        cJSON_GetObjectItemCaseSensitive(pickup, "imageUrl"));
 
-                json_t *addr = json_object_get(pickup, "addressDetails");
-                if (json_is_object(addr)) {
+                cJSON *addr = cJSON_GetObjectItemCaseSensitive(pickup, "addressDetails");
+                if (cJSON_IsObject(addr)) {
                     jstrcpy(p->city, sizeof(p->city),
-                            json_object_get(addr, "city"));
+                            cJSON_GetObjectItemCaseSensitive(addr, "city"))   ;
                     jstrcpy(p->street, sizeof(p->street),
-                            json_object_get(addr, "street"));
+                            cJSON_GetObjectItemCaseSensitive(addr, "street"));
                 }
-                json_t *location = json_object_get(pickup, "location");
-                if (json_is_object(location)) {
-                    json_t *lat = json_object_get(location, "latitude");
-                    json_t *lon = json_object_get(location, "longitude");
+                cJSON *location = cJSON_GetObjectItemCaseSensitive(pickup, "location");
+                if (cJSON_IsObject(location)) {
+                    cJSON *lat = cJSON_GetObjectItemCaseSensitive(location, "latitude");
+                    cJSON *lon = cJSON_GetObjectItemCaseSensitive(location, "longitude");
 
-                    if (json_is_number(lat))
-                        p->latitude = (float)json_number_value(lat);
-                    if (json_is_number(lon))
-                        p->longitude = (float)json_number_value(lon);
+                    if (cJSON_IsNumber(lat))
+                        p->latitude = (float)cJSON_GetNumberValue(lat);
+                    if (cJSON_IsNumber(lon))
+                        p->longitude = (float)cJSON_GetNumberValue(lon);
                 }
             }
         }
-        json_t *receiver = json_object_get(parcel, "receiver");
-        json_t *receiver_phone = json_object_get(receiver, "phoneNumber");
-        if (json_is_object(receiver_phone)) {
+        cJSON *receiver = cJSON_GetObjectItemCaseSensitive(parcel, "receiver");
+        cJSON *receiver_phone = cJSON_GetObjectItemCaseSensitive(receiver, "phoneNumber");
+        if (cJSON_IsObject(receiver_phone)) {
             jstrcpy(p->phonePrefix, sizeof(p->phonePrefix),
-                    json_object_get(receiver_phone, "prefix"));
+                    cJSON_GetObjectItemCaseSensitive(receiver_phone, "prefix"));
             jstrcpy(p->phoneNumber, sizeof(p->phoneNumber),
-                    json_object_get(receiver_phone, "value"));
+                    cJSON_GetObjectItemCaseSensitive(receiver_phone, "value"));
         }
 
         
-        json_t *eventsArray = json_object_get(parcel, "events");
-        if (json_is_array(eventsArray) && json_array_size(eventsArray) > 0) {
-            json_t *latest = json_array_get(eventsArray, 0); 
-            jstrcpy(p->latestEvent, sizeof(p->latestEvent), json_object_get(latest, "eventTitle"));
+        cJSON *eventsArray = cJSON_GetObjectItemCaseSensitive(parcel, "events");
+        if (cJSON_IsArray(eventsArray) && cJSON_GetArraySize(eventsArray) > 0) {
+            cJSON *latest = cJSON_GetArrayItem(eventsArray, 0); 
+            jstrcpy(p->latestEvent, sizeof(p->latestEvent), cJSON_GetObjectItemCaseSensitive(latest, "eventTitle"));
         } else {
             p->latestEvent[0] = '\0';
         }
@@ -268,24 +268,24 @@ void parseFakePaczkas() {
 
         
         p->eventCount = 0;
-        json_t *eventLog = json_object_get(parcel, "events");
+        cJSON *eventLog = cJSON_GetObjectItemCaseSensitive(parcel, "events");
 
         jstrcpy(p->storedDate, sizeof(p->storedDate),
-                json_object_get(json_array_get(eventLog, 0), "date"));
-        if (json_is_array(eventLog)) {
+                cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(eventLog, 0), "date"));
+        if (cJSON_IsArray(eventLog)) {
             size_t e;
-            json_t *event;
+            cJSON *event;
 
-            json_array_foreach(eventLog, e, event) {
+            cJSON_ArrayForEach(event, eventLog) {
                 if (p->eventCount >= MAX_EVENTS)
                     break;
 
                 PaczkaEvent *ev = &p->events[p->eventCount];
 
                 jstrcpy(ev->name, sizeof(ev->name),
-                        json_object_get(event, "eventTitle"));
+                        cJSON_GetObjectItemCaseSensitive(event, "eventTitle"));
                 jstrcpy(ev->date, sizeof(ev->date),
-                        json_object_get(event, "date"));
+                        cJSON_GetObjectItemCaseSensitive(event, "date"));
 
                 p->eventCount++;
             }
@@ -296,34 +296,29 @@ void parseFakePaczkas() {
 
     log_to_file("[parsePaczkas] Parsed %d paczkas", paczka_count);
 
-    json_decref(root);
+    cJSON_Delete(root);
 }
 
 // parsuj paczki do structa "paczka_list"
 void parsePaczkas(const char* json) {
     bool ignore_bo_kurier = false;
-    json_error_t error;
-    json_t *root = json_loads(json, 0, NULL);
-    
-    if (!root) {
-        log_to_file("[parsePaczkas] JSON error: %s (line %d)",
-                    error.text, error.line);
-        return;
-    }
 
-    json_t *parcels = json_object_get(root, "parcels");
-    if (!json_is_array(parcels)) {
+    cJSON *root = cJSON_Parse(json);
+    
+
+    cJSON *parcels = cJSON_GetObjectItemCaseSensitive(root, "parcels");
+    if (!cJSON_IsArray(parcels)) {
         log_to_file("[parsePaczkas] parcels is not array");
-        json_decref(root);
+        cJSON_Delete(root);
         return;
     }
 
     paczka_count = 0;
 
-    size_t total_parcels = json_array_size(parcels);
+    size_t total_parcels = cJSON_GetArraySize(parcels);
     
     for (size_t i = total_parcels; i > 0; i--) {
-        json_t *parcel = json_array_get(parcels, i - 1);
+        cJSON *parcel = cJSON_GetArrayItem(parcels, i - 1);
     
 
         if (paczka_count >= MAX_PACZKAS)
@@ -331,7 +326,7 @@ void parsePaczkas(const char* json) {
 
         Paczka *p = &paczka_list[paczka_count];
         
-        if (strstr(json_string_value(json_object_get(parcel, "shipmentType")), "courier") != NULL) {
+        if (strstr(cJSON_GetStringValue(cJSON_GetObjectItemCaseSensitive(parcel, "shipmentType")), "courier") != NULL) {
             p->courier_paczka = true;
             ignore_bo_kurier = true;
         } else {
@@ -340,76 +335,76 @@ void parsePaczkas(const char* json) {
         }
        
         jstrcpy(p->shipmentNumber, sizeof(p->shipmentNumber),
-                json_object_get(parcel, "shipmentNumber"));
+                cJSON_GetObjectItemCaseSensitive(parcel, "shipmentNumber"));
         jstrcpy(p->statusGroup, sizeof(p->statusGroup),
-                json_object_get(parcel, "statusGroup"));
+                cJSON_GetObjectItemCaseSensitive(parcel, "statusGroup"));
         jstrcpy(p->parcelSize, sizeof(p->parcelSize),
-                json_object_get(parcel, "parcelSize"));
+                cJSON_GetObjectItemCaseSensitive(parcel, "parcelSize"));
         if (!ignore_bo_kurier) {
             jstrcpy(p->pickUpDate, sizeof(p->pickUpDate),
-                    json_object_get(parcel, "pickUpDate"));     
+                    cJSON_GetObjectItemCaseSensitive(parcel, "pickUpDate"));     
             jstrcpy(p->opencode, sizeof(p->opencode),
-                    json_object_get(parcel, "openCode"));
-            if (json_object_get(parcel, "openCode")) {
+                    cJSON_GetObjectItemCaseSensitive(parcel, "openCode"));
+            if (cJSON_GetObjectItemCaseSensitive(parcel, "openCode")) {
                 p->paczka_openable = true;
             } else {
                 p->paczka_openable = false;
             }
             jstrcpy(p->qrCode, sizeof(p->qrCode),
-                    json_object_get(parcel, "qrCode"));
+                    cJSON_GetObjectItemCaseSensitive(parcel, "qrCode"));
         } 
         jstrcpy(p->status, sizeof(p->status),
-                json_object_get(parcel, "status"));
+                cJSON_GetObjectItemCaseSensitive(parcel, "status"));
         if (strstr(p->status, "DELIVERED")) {
             p->paczka_openable = false;
         } 
         if (ignore_bo_kurier) {
-            json_t *sender = json_object_get(parcel, "sender");
-            json_t *sender_name = json_object_get(sender, "name");
+            cJSON *sender = cJSON_GetObjectItemCaseSensitive(parcel, "sender");
+            cJSON *sender_name = cJSON_GetObjectItemCaseSensitive(sender, "name");
             jstrcpy(p->pickupPointName, sizeof(p->pickupPointName), sender_name);
         }
         
         if (!ignore_bo_kurier) {
-            json_t *pickup = json_object_get(parcel, "pickUpPoint");
-            if (json_is_object(pickup)) {
+            cJSON *pickup = cJSON_GetObjectItemCaseSensitive(parcel, "pickUpPoint");
+            if (cJSON_IsObject(pickup)) {
                 jstrcpy(p->pickupPointName, sizeof(p->pickupPointName),
-                        json_object_get(pickup, "name"));
+                        cJSON_GetObjectItemCaseSensitive(pickup, "name"));
                 jstrcpy(p->imageUrl, sizeof(p->imageUrl),
-                        json_object_get(pickup, "imageUrl"));
+                        cJSON_GetObjectItemCaseSensitive(pickup, "imageUrl"));
 
-                json_t *addr = json_object_get(pickup, "addressDetails");
-                if (json_is_object(addr)) {
+                cJSON *addr = cJSON_GetObjectItemCaseSensitive(pickup, "addressDetails");
+                if (cJSON_IsObject(addr)) {
                     jstrcpy(p->city, sizeof(p->city),
-                            json_object_get(addr, "city"));
+                            cJSON_GetObjectItemCaseSensitive(addr, "city"));
                     jstrcpy(p->street, sizeof(p->street),
-                            json_object_get(addr, "street"));
+                            cJSON_GetObjectItemCaseSensitive(addr, "street"));
                 }
-                json_t *location = json_object_get(pickup, "location");
-                if (json_is_object(location)) {
-                    json_t *lat = json_object_get(location, "latitude");
-                    json_t *lon = json_object_get(location, "longitude");
+                cJSON *location = cJSON_GetObjectItemCaseSensitive(pickup, "location");
+                if (cJSON_IsObject(location)) {
+                    cJSON *lat = cJSON_GetObjectItemCaseSensitive(location, "latitude");
+                    cJSON *lon = cJSON_GetObjectItemCaseSensitive(location, "longitude");
 
-                    if (json_is_number(lat))
-                        p->latitude = (float)json_number_value(lat);
-                    if (json_is_number(lon))
-                        p->longitude = (float)json_number_value(lon);
+                    if (cJSON_IsNumber(lat))
+                        p->latitude = (float)cJSON_GetNumberValue(lat);
+                    if (cJSON_IsNumber(lon))
+                        p->longitude = (float)cJSON_GetNumberValue(lon);
                 }
             }
         }
-        json_t *receiver = json_object_get(parcel, "receiver");
-        json_t *receiver_phone = json_object_get(receiver, "phoneNumber");
-        if (json_is_object(receiver_phone)) {
+        cJSON *receiver = cJSON_GetObjectItemCaseSensitive(parcel, "receiver");
+        cJSON *receiver_phone = cJSON_GetObjectItemCaseSensitive(receiver, "phoneNumber");
+        if (cJSON_IsObject(receiver_phone)) {
             jstrcpy(p->phonePrefix, sizeof(p->phonePrefix),
-                    json_object_get(receiver_phone, "prefix"));
+                    cJSON_GetObjectItemCaseSensitive(receiver_phone, "prefix"));
             jstrcpy(p->phoneNumber, sizeof(p->phoneNumber),
-                    json_object_get(receiver_phone, "value"));
+                    cJSON_GetObjectItemCaseSensitive(receiver_phone, "value"));
         }
 
         
-        json_t *eventsArray = json_object_get(parcel, "events");
-        if (json_is_array(eventsArray) && json_array_size(eventsArray) > 0) {
-            json_t *latest = json_array_get(eventsArray, 0); 
-            jstrcpy(p->latestEvent, sizeof(p->latestEvent), json_object_get(latest, "eventTitle"));
+        cJSON *eventsArray = cJSON_GetObjectItemCaseSensitive(parcel, "events");
+        if (cJSON_IsArray(eventsArray) && cJSON_GetArraySize(eventsArray) > 0) {
+            cJSON *latest = cJSON_GetArrayItem(eventsArray, 0); 
+            jstrcpy(p->latestEvent, sizeof(p->latestEvent), cJSON_GetObjectItemCaseSensitive(latest, "eventTitle"));
         } else {
             p->latestEvent[0] = '\0';
         }
@@ -417,24 +412,29 @@ void parsePaczkas(const char* json) {
 
         
         p->eventCount = 0;
-        json_t *eventLog = json_object_get(parcel, "events");
+        cJSON *eventLog = cJSON_GetObjectItemCaseSensitive(parcel, "events");
 
-        jstrcpy(p->storedDate, sizeof(p->storedDate),
-                json_object_get(json_array_get(eventLog, 0), "date"));
-        if (json_is_array(eventLog)) {
+        cJSON *firstEvent = cJSON_GetArrayItem(eventLog, 0);
+        if (cJSON_IsObject(firstEvent)) {
+            jstrcpy(p->storedDate, sizeof(p->storedDate),
+                    cJSON_GetObjectItemCaseSensitive(firstEvent, "date"));
+        } else {
+            p->storedDate[0] = '\0';
+        }
+        if (cJSON_IsArray(eventLog)) {
             size_t e;
-            json_t *event;
+            cJSON *event;
 
-            json_array_foreach(eventLog, e, event) {
+            cJSON_ArrayForEach(event, eventLog) {
                 if (p->eventCount >= MAX_EVENTS)
                     break;
 
                 PaczkaEvent *ev = &p->events[p->eventCount];
 
                 jstrcpy(ev->name, sizeof(ev->name),
-                        json_object_get(event, "eventTitle"));
+                        cJSON_GetObjectItemCaseSensitive(event, "eventTitle"));
                 jstrcpy(ev->date, sizeof(ev->date),
-                        json_object_get(event, "date"));
+                        cJSON_GetObjectItemCaseSensitive(event, "date"));
 
                 p->eventCount++;
             }
@@ -445,7 +445,7 @@ void parsePaczkas(const char* json) {
 
     log_to_file("[parsePaczkas] Parsed %d paczkas", paczka_count);
 
-    json_decref(root);
+    cJSON_Delete(root);
 }
 
 void getWyslanePaczkas() {
@@ -515,44 +515,47 @@ void getPersonalData() {
 // przeparsuj dane z getPersonalData do in_post_dane.json
 void parsePersonalData(const char* json){
     pers_data_done = false;
-    json_t *root = json_loads(json, 0, NULL);
-    json_t *rootenmach = json_load_file("/3ds/in_post_dane.json", 0, NULL);
-    
-    json_t *personal = json_object_get(root, "personal");
-    json_t *firstname = json_object_get(personal, "firstName");
-    json_t *lastname = json_object_get(personal, "lastName");
-    json_t *phone = json_object_get(personal, "phoneNumber");
-    json_t *phoneprefix = json_object_get(personal, "phoneNumberPrefix");
-    json_t *email = json_object_get(personal, "email");
+    cJSON *root = cJSON_Parse(json);
+    cJSON *rootenmach = NULL;
+    open_json("romfs:/test_data.json", &rootenmach);
 
     
-    json_t *delivery = json_object_get(root, "delivery");
-    json_t *points = json_object_get(delivery, "points");
-    json_t *items = json_object_get(points, "items");
-    json_t *pierwszy_paczkomat = json_array_get(items, 0);
-    json_t *id_paczkomatu = json_object_get(pierwszy_paczkomat, "name");
-    json_t *dane_adresowe = json_object_get(pierwszy_paczkomat, "addressLines");
+    cJSON *personal = cJSON_GetObjectItemCaseSensitive(root, "personal");
+    cJSON *firstname = cJSON_GetObjectItemCaseSensitive(personal, "firstName");
+    cJSON *lastname = cJSON_GetObjectItemCaseSensitive(personal, "lastName");
+    cJSON *phone = cJSON_GetObjectItemCaseSensitive(personal, "phoneNumber");
+    cJSON *phoneprefix = cJSON_GetObjectItemCaseSensitive(personal, "phoneNumberPrefix");
+    cJSON *email = cJSON_GetObjectItemCaseSensitive(personal, "email");
+
+    
+    cJSON *delivery = cJSON_GetObjectItemCaseSensitive(root, "delivery");
+    cJSON *points = cJSON_GetObjectItemCaseSensitive(delivery, "points");
+    cJSON *items = cJSON_GetObjectItemCaseSensitive(points, "items");
+    cJSON *pierwszy_paczkomat = cJSON_GetArrayItem(items, 0);
+    cJSON *id_paczkomatu = cJSON_GetObjectItemCaseSensitive(pierwszy_paczkomat, "name");
+    cJSON *dane_adresowe = cJSON_GetObjectItemCaseSensitive(pierwszy_paczkomat, "addressLines");
 
     
 
-    json_object_set_new(rootenmach, "firstname", json_string(json_string_value(firstname)));
-    json_object_set_new(rootenmach, "lastname", json_string(json_string_value(lastname)));
-    json_object_set_new(rootenmach, "phone_number", json_string(json_string_value(phone)));
-    json_object_set_new(rootenmach, "phoneprefix", json_string(json_string_value(phoneprefix)));
-    json_object_set_new(rootenmach, "email", json_string(json_string_value(email)));
-    json_object_set_new(rootenmach, "id_pref_paczkomatu", json_string(json_string_value(id_paczkomatu)));
+    cJSON_AddItemToObject(rootenmach, "firstname", cJSON_CreateString(cJSON_GetStringValue(firstname)));
+    cJSON_AddItemToObject(rootenmach, "lastname", cJSON_CreateString(cJSON_GetStringValue(lastname)));
+    cJSON_AddItemToObject(rootenmach, "phone_number", cJSON_CreateString(cJSON_GetStringValue(phone)));
+    cJSON_AddItemToObject(rootenmach, "phoneprefix", cJSON_CreateString(cJSON_GetStringValue(phoneprefix)));
+    cJSON_AddItemToObject(rootenmach, "email", cJSON_CreateString(cJSON_GetStringValue(email)));
+    cJSON_AddItemToObject(rootenmach, "id_pref_paczkomatu", cJSON_CreateString(cJSON_GetStringValue(id_paczkomatu)));
     size_t i;
-    json_t *linia;
+    cJSON *linia;
 
-    json_t *adres_array = json_array();
-    json_array_foreach(dane_adresowe, i, linia) {
-        json_array_append_new(adres_array, json_string(json_string_value(linia)));
+    cJSON *adres_array = cJSON_CreateArray();
+    cJSON_ArrayForEach(linia, dane_adresowe) {
+        cJSON_AddItemToArray(adres_array, cJSON_CreateString(cJSON_GetStringValue(linia)));
     }
-    json_object_set_new(rootenmach, "adres_pref_paczkomatu", adres_array);
+    cJSON_AddItemToObject(rootenmach, "adres_pref_paczkomatu", adres_array);
 
 
-    json_dump_file(rootenmach, "/3ds/in_post_dane.json", JSON_INDENT(4));
+    save_json("/3ds/in_post_dane.json", rootenmach);
     pers_data_done = true;
+    cJSON_Delete(root);
 }
 
 // pobierz inpointsy (never used lol)
@@ -598,30 +601,26 @@ void getPaczkomatStatus(const char* shipmentNumber, const char* openCode, const 
     headers = curl_slist_append(headers, "User-Agent: InPost-Mobile/3.46.0(34600200) (Horizon 11.17.0-50U; AW715988204; Nintendo 3DS; pl)");
     headers = curl_slist_append(headers, authheader);
 
-    json_t *data = json_object();
+    cJSON *data = cJSON_CreateObject();
 
-    json_t *parcel = json_object();
-    json_object_set_new(parcel, "shipmentNumber",
-                        json_string(shipmentNumber));
-    json_object_set_new(parcel, "openCode",
-                        json_string(openCode));
+    cJSON *parcel = cJSON_CreateObject();
+    cJSON_AddItemToObject(parcel, "shipmentNumber", cJSON_CreateString(shipmentNumber));
+    cJSON_AddItemToObject(parcel, "openCode", cJSON_CreateString(openCode));
 
-    json_t *phone = json_object();
-    json_object_set_new(phone, "prefix",
-                        json_string(recieverPhonePrefix));
-    json_object_set_new(phone, "value",
-                        json_string(recieverPhoneNumber));
+    cJSON *phone = cJSON_CreateObject();
+    cJSON_AddItemToObject(phone, "prefix", cJSON_CreateString(recieverPhonePrefix));
+    cJSON_AddItemToObject(phone, "value", cJSON_CreateString(recieverPhoneNumber));
 
-    json_object_set_new(parcel, "recieverPhoneNumber", phone);
+    cJSON_AddItemToObject(parcel, "recieverPhoneNumber", phone);
 
-    json_t *geo = json_object();
-    json_object_set_new(geo, "latitude", json_real(latitude));
-    json_object_set_new(geo, "longitude", json_real(longitude));
-    json_object_set_new(geo, "accuracy", json_real(13.365));
+    cJSON *geo = cJSON_CreateObject();
+    cJSON_AddItemToObject(geo, "latitude", cJSON_CreateNumber(latitude));
+    cJSON_AddItemToObject(geo, "longitude", cJSON_CreateNumber(longitude));
+    cJSON_AddItemToObject(geo, "accuracy", cJSON_CreateNumber(13.365));
 
-    json_object_set_new(data, "parcel", parcel);
-    json_object_set_new(data, "geoPoint", geo);
-    char *data_json = json_dumps(data, JSON_INDENT(2));
+    cJSON_AddItemToObject(data, "parcel", parcel);
+    cJSON_AddItemToObject(data, "geoPoint", geo);
+    char *data_json = cJSON_Print(data);
     free(authheader);
     queue_request("https://api-inmobile-pl.easypack24.net/v2/collect/validate", data_json, headers, &validate_paczkomat, false);
     free(data_json);
@@ -645,9 +644,9 @@ void openPaczkomat(const char* uuid) {
 
     free(authheader);
 
-    json_t *data = json_object();
-    json_object_set_new(data, "sessionUuid", json_string(uuid));
-    char *data_json = json_dumps(data, JSON_INDENT(2));
+    cJSON *data = cJSON_CreateObject();
+    cJSON_AddItemToObject(data, "sessionUuid", cJSON_CreateString(uuid));
+    char *data_json = cJSON_Print(data);
     queue_request("https://api-inmobile-pl.easypack24.net/v1/collect/compartment/open", data_json, headers, &open_paczkomat, false);
     free(data_json);
 }
@@ -716,9 +715,9 @@ void terminatePaczka(const char* uuid) {
 
     free(authheader);
 
-    json_t *data = json_object();
-    json_object_set_new(data, "sessionUuid", json_string(uuid));
-    char *data_json = json_dumps(data, JSON_INDENT(2));
+    cJSON *data = cJSON_CreateObject();
+    cJSON_AddItemToObject(data, "sessionUuid", cJSON_CreateString(uuid));
+    char *data_json = cJSON_Print(data);
     queue_request("https://api-inmobile-pl.easypack24.net/v1/collect/compartment/terminate", data_json, headers, &terminate_paczka, false);
     free(data_json);
 }
@@ -739,15 +738,15 @@ void jaktamSkrytka(const char* uuid, bool otwarta) {
     headers = curl_slist_append(headers, "User-Agent: InPost-Mobile/3.46.0(34600200) (Horizon 11.17.0-50U; AW715988204; Nintendo 3DS; pl)");
     headers = curl_slist_append(headers, authheader);
 
-    json_t *data = json_object();
-    json_object_set_new(data, "sessionUuid", json_string(uuid));
+    cJSON *data = cJSON_CreateObject();
+    cJSON_AddItemToObject(data, "sessionUuid", cJSON_CreateString(uuid));
     if (otwarta) {
-        json_object_set_new(data, "expectedStatus", json_string("OPENED"));
+        cJSON_AddItemToObject(data, "expectedStatus", cJSON_CreateString("OPENED"));
     } else {
-        json_object_set_new(data, "expectedStatus", json_string("CLOSED"));
+        cJSON_AddItemToObject(data, "expectedStatus", cJSON_CreateString("CLOSED"));
     }
 
-    char *data_json = json_dumps(data, JSON_INDENT(2));
+    char *data_json = cJSON_Print(data);
     queue_request("https://api-inmobile-pl.easypack24.net/v1/collect/compartment/status", data_json, headers, &jak_tam_skrytka, false);
     free(data_json);
 }

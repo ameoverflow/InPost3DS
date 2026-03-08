@@ -17,6 +17,8 @@
 #include <ctype.h>
 #include "scene_mainmenu.h"
 #include "drawing.h"
+#include "cJSON.h"
+#include "utils.h"
 
 extern int paczka_count;
 extern Paczka paczka_list[];
@@ -227,13 +229,13 @@ void requestOpenLocker(void) {
 }
 
 void onPaczkaCollected(void) {
-    json_t *root = json_loads((const char*)validate_paczkomat.data, 0, NULL);
+    cJSON *root = cJSON_Parse((const char*)validate_paczkomat.data);
     if(root) {
-        json_t *uuid_open = json_object_get(root, "sessionUuid");
+        cJSON *uuid_open = cJSON_GetObjectItem(root, "sessionUuid");
         if(uuid_open) {
-            terminatePaczka(json_string_value(uuid_open));
+            terminatePaczka(cJSON_GetStringValue(uuid_open));
         }
-        json_decref(root);
+        cJSON_Delete(root);
     }
 }
 
@@ -420,12 +422,12 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
 
             if (touch.py >= 180 && touch.py <= 210 && touch.px >= 110 && touch.px <= 210) {
                 inSettingsMode = false;
-                json_t *oproot = json_object();
+                cJSON *oproot = cJSON_CreateObject();
 
-                json_object_set_new(oproot, "VA", json_integer(VOICEACT));
+                cJSON_AddItemToObject(oproot, "VA", cJSON_CreateNumber(VOICEACT));
 
-                json_dump_file(oproot, "/3ds/InPost3DS/opcje.json", JSON_COMPACT);
-                json_decref(oproot);
+                save_json("/3ds/InPost3DS/opcje.json", oproot);
+                cJSON_Delete(oproot);
                 stopCwav(1);
                 freeAllCwavs();
                 sceneManagerSwitchTo(SCENE_MAIN_MENU);
@@ -434,12 +436,12 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
 
         if (kDown & KEY_A) {
             inSettingsMode = false;
-            json_t *oproot = json_object();
+            cJSON *oproot = cJSON_CreateObject();
 
-            json_object_set_new(oproot, "VA", json_integer(VOICEACT));
+            cJSON_AddItemToObject(oproot, "VA", cJSON_CreateNumber(VOICEACT));
 
-            json_dump_file(oproot, "/3ds/InPost3DS/opcje.json", JSON_COMPACT);
-            json_decref(oproot);
+            save_json("/3ds/InPost3DS/opcje.json", oproot);
+            cJSON_Delete(oproot);
             stopCwav(1);
             freeAllCwavs();
             sceneManagerSwitchTo(SCENE_MAIN_MENU);
@@ -477,12 +479,12 @@ void sceneHomeMenuUpdate(uint32_t kDown, uint32_t kHeld) {
     }
 
     if (validate_paczkomat.done && is_in_open_paczkomat_flow) {
-        json_t *root = json_loads((const char*)validate_paczkomat.data, 0, NULL);
+        cJSON *root = cJSON_Parse((const char*)validate_paczkomat.data);
         if (root) {
-            json_t *uuid_open = json_object_get(root, "sessionUuid");
+            cJSON *uuid_open = cJSON_GetObjectItem(root, "sessionUuid");
             open_paczkomat.done = false;
-            if(uuid_open) openPaczkomat(json_string_value(uuid_open));
-            json_decref(root);
+            if(uuid_open) openPaczkomat(cJSON_GetStringValue(uuid_open));
+            cJSON_Delete(root);
         }
         is_in_open_paczkomat_flow = false;
         waitingForOpenCompletion = true;
