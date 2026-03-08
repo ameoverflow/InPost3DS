@@ -273,7 +273,6 @@ void parseFakePaczkas() {
         jstrcpy(p->storedDate, sizeof(p->storedDate),
                 cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(eventLog, 0), "date"));
         if (cJSON_IsArray(eventLog)) {
-            size_t e;
             cJSON *event;
 
             cJSON_ArrayForEach(event, eventLog) {
@@ -422,7 +421,6 @@ void parsePaczkas(const char* json) {
             p->storedDate[0] = '\0';
         }
         if (cJSON_IsArray(eventLog)) {
-            size_t e;
             cJSON *event;
 
             cJSON_ArrayForEach(event, eventLog) {
@@ -543,7 +541,6 @@ void parsePersonalData(const char* json){
     cJSON_AddItemToObject(rootenmach, "phoneprefix", cJSON_CreateString(cJSON_GetStringValue(phoneprefix)));
     cJSON_AddItemToObject(rootenmach, "email", cJSON_CreateString(cJSON_GetStringValue(email)));
     cJSON_AddItemToObject(rootenmach, "id_pref_paczkomatu", cJSON_CreateString(cJSON_GetStringValue(id_paczkomatu)));
-    size_t i;
     cJSON *linia;
 
     cJSON *adres_array = cJSON_CreateArray();
@@ -580,9 +577,10 @@ void getInPointsBalance() {
 
 // parsuj inpointsy (never used lol)
 void parseInPointsBalance(const char* json){
-    json_t *root = json_loads(json, 0, NULL);
-    json_t *balans = json_object_get(root, "currentBalance");
-    inpointsy = json_integer_value(balans);
+    cJSON *root = cJSON_Parse(json);
+    cJSON *balans = cJSON_GetObjectItemCaseSensitive(root, "currentBalance");
+    inpointsy = cJSON_GetNumberValue(balans);
+    cJSON_Delete(root);
 }
 
 // pobierz status paczkomatu który otwierasz
