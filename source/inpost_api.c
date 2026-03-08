@@ -621,6 +621,7 @@ void getPaczkomatStatus(const char* shipmentNumber, const char* openCode, const 
     char *data_json = cJSON_Print(data);
     free(authheader);
     queue_request("https://api-inmobile-pl.easypack24.net/v2/collect/validate", data_json, headers, &validate_paczkomat, false);
+    cJSON_Delete(data);
     free(data_json);
 }
 
@@ -646,6 +647,7 @@ void openPaczkomat(const char* uuid) {
     cJSON_AddItemToObject(data, "sessionUuid", cJSON_CreateString(uuid));
     char *data_json = cJSON_Print(data);
     queue_request("https://api-inmobile-pl.easypack24.net/v1/collect/compartment/open", data_json, headers, &open_paczkomat, false);
+    cJSON_Delete(data);
     free(data_json);
 }
 
@@ -717,6 +719,7 @@ void terminatePaczka(const char* uuid) {
     cJSON_AddItemToObject(data, "sessionUuid", cJSON_CreateString(uuid));
     char *data_json = cJSON_Print(data);
     queue_request("https://api-inmobile-pl.easypack24.net/v1/collect/compartment/terminate", data_json, headers, &terminate_paczka, false);
+    cJSON_Delete(data);
     free(data_json);
 }
 
@@ -746,6 +749,7 @@ void jaktamSkrytka(const char* uuid, bool otwarta) {
 
     char *data_json = cJSON_Print(data);
     queue_request("https://api-inmobile-pl.easypack24.net/v1/collect/compartment/status", data_json, headers, &jak_tam_skrytka, false);
+    cJSON_Delete(data);
     free(data_json);
 }
 
