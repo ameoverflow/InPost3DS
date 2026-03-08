@@ -21,6 +21,8 @@
 
 **BGM:** [Chiyoko Music](https://www.youtube.com/c/ChipJockey), [John "Joy" Tay](https://www.youtube.com/@johntayjinf), [Takenobu Mitsuyoshi, Naofumi Hataya & Tomoko Sasaki](https://www.youtube.com/watch?v=hjN-RvJquvM)
 
+**Zewnętrzne Biblioteki:** [qrcodegen - Nayuki](https://github.com/nayuki/QR-Code-generator), [Lode Vandevenne - lodepng](https://github.com/lvandeve/lodepng), [Dave Gamble - cJSON](https://github.com/DaveGamble/cJSON)
+
 **Pozdrowienia dla wszystkich Beta Testerów. Bez was nie byłoby to możliwe! (Full lista w apce)**
 
    </td>
